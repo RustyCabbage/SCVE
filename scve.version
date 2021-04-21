@@ -1,12 +1,12 @@
 {
-    "masterVersionFile":"",
+    "masterVersionFile":"https://raw.githubusercontent.com/RustyCabbage/Ship-Catalogue-Variant-Designer/main/scve.version",
     "modName":"Ship Catalogue / Variant Editor",
     "modThreadId":"",
     "modNexusId":"",
     "modVersion":
     {
         "major":1,
-        "minor":0,
+        "minor":1,
         "patch":0
     }
 }
