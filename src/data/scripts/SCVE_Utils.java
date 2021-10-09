@@ -1,15 +1,24 @@
 package data.scripts;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.ModSpecAPI;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipHullSpecAPI;
 import com.fs.starfarer.api.combat.ShipVariantAPI;
-import com.fs.starfarer.api.fleet.FleetMemberAPI;
+import com.fs.starfarer.api.fleet.FleetGoal;
+import com.fs.starfarer.api.fleet.FleetMemberType;
+import com.fs.starfarer.api.mission.FleetSide;
+import com.fs.starfarer.api.mission.MissionDefinitionAPI;
+import com.fs.starfarer.api.util.ListMap;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class SCVE_Utils {
@@ -17,29 +26,10 @@ public class SCVE_Utils {
     private static final Logger log = Global.getLogger(SCVE_Utils.class);
 
     public static final String
-            MOD_ID = "ShipCatalogueVariantEditor",
+            //MOD_ID = "ShipCatalogueVariantEditor",
             MOD_PREFIX = "SCVE";
     public static final String
-            HULL_SUFFIX = "_Hull",
-            STATION_OR_MODULE_REGEX = "(.*)(station|module)(.*)";
-    public static Set<String> allModules = new HashSet<>();
-    public static final ArrayList<String> vanillaManufacturers = new ArrayList<>();
-
-    static {
-        vanillaManufacturers.add("Low Tech");
-        vanillaManufacturers.add("Midline");
-        vanillaManufacturers.add("High Tech");
-        vanillaManufacturers.add("Pirate");
-        vanillaManufacturers.add("Luddic Path");
-        vanillaManufacturers.add("Hegemony");
-        vanillaManufacturers.add("XIV Battlegroup");
-        vanillaManufacturers.add("Luddic Church");
-        vanillaManufacturers.add("Tri-Tachyon");
-        vanillaManufacturers.add("Explorarium");
-        vanillaManufacturers.add("Remnant");
-        vanillaManufacturers.add("Unknown");
-    }
-
+            HULL_SUFFIX = "_Hull";
 
     public static String getString(String id) {
         return Global.getSettings().getString(MOD_PREFIX, id);
@@ -53,161 +43,120 @@ public class SCVE_Utils {
             }
             String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
             ShipVariantAPI variant = Global.getSettings().getVariant(hullVariantId);
-            modulesSet.addAll(variant.getStationModules().values()); // values() are hull variant ids
+            for (String moduleId : variant.getStationModules().values()) {
+                modulesSet.add(Global.getSettings().getVariant(moduleId).getHullSpec().getHullId());
+            }
+            //modulesSet.addAll(variant.getStationModules().values()); // values() are hull variant ids
         }
+        log.info(modulesSet);
         return modulesSet;
     }
 
-    public static boolean isDamagedVersion(ShipHullSpecAPI hullSpec) {
-        return (hullSpec.isDHull() && hullSpec.getHullId().endsWith("_d"));
-        // isDHull() only checks if it has d-mods, thus including LP ships
-        // but some mod ships can end in _d without being d-hulls, so include both
+    public static void initializeMission(MissionDefinitionAPI api, String playerTagline) {
+        String fleetPrefix = getString("fleetPrefix");
+        //String playerTagline = getString("vanillaTagline");
+        String enemyTagLine = getString("enemyTagline");
+        float mapSize = 8000f; // multiples of 2000 only
+        api.initFleet(FleetSide.PLAYER, fleetPrefix, FleetGoal.ATTACK, true);
+        api.initFleet(FleetSide.ENEMY, fleetPrefix, FleetGoal.ATTACK, true);
+        api.setFleetTagline(FleetSide.PLAYER, playerTagline);
+        api.setFleetTagline(FleetSide.ENEMY, enemyTagLine);
+        api.addToFleet(FleetSide.ENEMY, "atlas_Standard", FleetMemberType.SHIP, true);
+        api.initMap(-mapSize / 2f, mapSize / 2f, -mapSize / 2f, mapSize / 2f);
     }
 
-    public static int manufacturerToInt(String manufacturer) {
-        if (vanillaManufacturers.contains(manufacturer)) {
-            return vanillaManufacturers.indexOf(manufacturer);
-        }
-        return 999; //non-vanilla tech types go last using this method
+    public static void createFilterBriefing(MissionDefinitionAPI api) {
+
     }
 
-    public static int hullSizeToInt(ShipAPI.HullSize hullSize) {
-        switch (hullSize) {
-            case FRIGATE:
-                return 1;
-            case DESTROYER:
-                return 2;
-            case CRUISER:
-                return 3;
-            case CAPITAL_SHIP:
-                return 4;
-            default:
-                return -1;
-        }
+    public static boolean validateHullSpec(ShipHullSpecAPI shipHullSpec, Set<String> blacklist) {
+        if (shipHullSpec.isDefaultDHull()) {
+            return false;
+        } else return !(shipHullSpec.getHullSize() == ShipAPI.HullSize.FIGHTER
+                || shipHullSpec.getHints().contains(ShipHullSpecAPI.ShipTypeHints.STATION)
+                //|| shipHullSpec.getHullId().matches(STATION_OR_MODULE_REGEX)
+                //|| shipHullSpec.getSpriteName().matches(STATION_OR_MODULE_REGEX)
+                //|| shipHullSpec.getTags().toString().matches(STATION_OR_MODULE_REGEX)
+                //|| shipHullSpec.getBuiltInMods().contains(HullMods.VASTBULK)
+                || blacklist.contains(shipHullSpec.getHullId())
+                || Global.getSettings().getVariant(shipHullSpec.getHullId() + "_Hull").isStation()
+                || (shipHullSpec.getManufacturer().equals(getString("commonTech")) && (!shipHullSpec.hasHullName() || shipHullSpec.getDesignation().isEmpty()))
+                || shipHullSpec.getHullId().equals("shuttlepod")); // fuck it has the same format as SWP arcade ships
     }
 
-    public static final Comparator<String> variantComparator = new Comparator<String>() {
-        // sort by:
-        // 1. non-d-hulls > d-hulls
-        // 2. manufacturer/tech type
-        // 3. hull size (ascending)
-        // 4. DP (ascending)
-        // 5. variant name
-        // 6. variant id
-        @Override
-        public int compare(String id1, String id2) {
-            ShipVariantAPI var1 = Global.getSettings().getVariant(id1);
-            ShipVariantAPI var2 = Global.getSettings().getVariant(id2);
-            boolean isGoalVariant1 = var1.isGoalVariant();
-            boolean isGoalVariant2 = var2.isGoalVariant();
-            boolean isDHull1 = isDamagedVersion(var1.getHullSpec());
-            boolean isDHull2 = isDamagedVersion(var2.getHullSpec());
-            String manufacturer1 = var1.getHullSpec().getManufacturer();
-            String manufacturer2 = var2.getHullSpec().getManufacturer();
-            int manufacturerScore1 = manufacturerToInt(manufacturer1);
-            int manufacturerScore2 = manufacturerToInt(manufacturer2);
-            int sizeScore1 = hullSizeToInt(var1.getHullSize());
-            int sizeScore2 = hullSizeToInt(var2.getHullSize());
-            //float DP1 = var1.getStatsForOpCosts().getSuppliesToRecover().getBaseValue(); // don't do this, NPEs
-            //float DP2 = var2.getStatsForOpCosts().getSuppliesToRecover().getBaseValue();
-            String name1 = var1.getDisplayName();
-            String name2 = var2.getDisplayName();
-            // put goalVariants at the top. shouldn't matter for stripped hulls, but using this for other stuff
-            if (isGoalVariant1 && !isGoalVariant2) {
-                return -1;
-            } else if (!isGoalVariant1 && isGoalVariant2) {
-                return 1;
+    public static ListMap<String> getModToHullListMap(Set<String> blacklist) {
+        String shipDataPath = "data/hulls/ship_data.csv";
+        try {
+            // create ListMap of sources (file paths) to base hulls, mods only
+            ListMap<String> sourceToHullListMap = new ListMap<>();
+            JSONArray array = Global.getSettings().getMergedSpreadsheetDataForMod("id", shipDataPath, "starsector-core");
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject row = array.getJSONObject(i);
+                String id = row.getString("id");
+                if (id.isEmpty()) {
+                    continue;
+                }
+                ShipHullSpecAPI shipHullSpec = Global.getSettings().getHullSpec(id);
+                // double check that the csv entry isn't just an edited vanilla hull
+                if (shipHullSpec.getShipFilePath().startsWith("data") && validateHullSpec(shipHullSpec, blacklist)) {
+                    String source = row.getString("fs_rowSource");
+                    if (source.startsWith("null")) { // blocks vanilla hulls
+                        continue;
+                    }
+                    sourceToHullListMap.add(source, id);
+                }
             }
-            // d-hull comparison first
-            if (isDHull1 && !isDHull2) {
-                return 1;
-            } else if (!isDHull1 && isDHull2) {
-                return -1;
+            // convert ListMap keys from sources to mod IDs
+            ListMap<String> modToHullListMap = new ListMap<>();
+            for (String source : sourceToHullListMap.keySet()) {
+                for (ModSpecAPI modSpec : Global.getSettings().getModManager().getEnabledModsCopy()) {
+                    if (modSpec.isUtility()) {
+                        continue;
+                    }
+                    if (source.contains(modSpec.getPath())) {
+                        modToHullListMap.put(modSpec.getId(), sourceToHullListMap.getList(source));
+                    }
+                }
             }
-            if (manufacturerScore1 != manufacturerScore2) { // compare numeric manufacturer score
-                return Integer.compare(manufacturerScore1, manufacturerScore2);
+            // add skins to ListMap
+            for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
+                if (!shipHullSpec.getShipFilePath().startsWith("data") // skip vanilla hulls
+                        || shipHullSpec.isBaseHull() // skip non-skins
+                        || !(validateHullSpec(shipHullSpec, blacklist))) { // skip modules/stations
+                    continue;
+                }
+                String hullId = shipHullSpec.getHullId();
+                // non-vanilla skins
+                boolean foundBaseHull = false;
+                for (Map.Entry<String, List<String>> entry : modToHullListMap.entrySet()) {
+                    String shipBaseHullSpecId = shipHullSpec.getBaseHullId();
+                    if (entry.getValue().contains(shipBaseHullSpecId)) {
+                        modToHullListMap.add(entry.getKey(), hullId);
+                        foundBaseHull = true;
+                        break;
+                    }
+                }
+                // vanilla skins
+                if (!foundBaseHull) {
+                    for (ModSpecAPI modSpec : Global.getSettings().getModManager().getEnabledModsCopy()) {
+                        // we can't only include the ships that are already in the list map because some mods don't have any ship_data but do have skins
+                        if (modSpec.isUtility()) {
+                            continue;
+                        }
+                        try {
+                            String shipFilePath = shipHullSpec.getShipFilePath();
+                            shipFilePath = shipFilePath.replace("\\", "/");
+                            Global.getSettings().loadJSON(shipFilePath, modSpec.getId());
+                            modToHullListMap.add(modSpec.getId(), hullId);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
             }
-            if (!manufacturer1.equalsIgnoreCase(manufacturer2)) { // if same score, compare strings (i.e. non-vanilla manufacturers are sorted alphabetically)
-                return manufacturer1.compareToIgnoreCase(manufacturer2);
-            }
-            if (sizeScore1 != sizeScore2) {
-                return Integer.compare(sizeScore1, sizeScore2);
-            }
-            //if (DP1 != DP2) {
-            //    return Float.compare(DP1, DP2);
-            //}
-            if (!name1.equalsIgnoreCase(name2)) {
-                return name1.compareToIgnoreCase(name2);
-            }
-            return id1.compareToIgnoreCase(id2);
+            return modToHullListMap;
+        } catch (IOException | JSONException e) {
+            log.error("Could not load " + shipDataPath);
         }
-    };
-
-    public static final Comparator<FleetMemberAPI> memberComparator = new Comparator<FleetMemberAPI>() {
-        // sort by:
-        // 1. non-d-hulls > d-hulls
-        // 2. manufacturer/tech type
-        // 3. hull size (ascending)
-        // 4. DP (ascending)
-        // 5. variant name
-        // 6. variant id
-        @Override
-        public int compare(FleetMemberAPI m1, FleetMemberAPI m2) {
-            ShipVariantAPI var1 = m1.getVariant();
-            ShipVariantAPI var2 = m2.getVariant();
-            boolean isGoalVariant1 = var1.isGoalVariant();
-            boolean isGoalVariant2 = var2.isGoalVariant();
-            boolean isDHull1 = isDamagedVersion(var1.getHullSpec());
-            boolean isDHull2 = isDamagedVersion(var2.getHullSpec());
-            String manufacturer1 = var1.getHullSpec().getManufacturer();
-            String manufacturer2 = var2.getHullSpec().getManufacturer();
-            int manufacturerScore1 = manufacturerToInt(manufacturer1);
-            int manufacturerScore2 = manufacturerToInt(manufacturer2);
-            int sizeScore1 = hullSizeToInt(var1.getHullSize());
-            int sizeScore2 = hullSizeToInt(var2.getHullSize());
-            float DP1 = m1.getStats().getSuppliesToRecover().getBaseValue();
-            float DP2 = m2.getStats().getSuppliesToRecover().getBaseValue();
-            String name1 = var1.getDisplayName();
-            String name2 = var2.getDisplayName();
-            String id1 = m1.getHullId();
-            String id2 = m2.getHullId();
-            // put goalVariants at the top. shouldn't matter for stripped hulls, but using this for other stuff
-            if (isGoalVariant1 && !isGoalVariant2) {
-                return -1;
-            } else if (!isGoalVariant1 && isGoalVariant2) {
-                return 1;
-            }
-            // d-hull comparison first
-            if (isDHull1 && !isDHull2) {
-                //log.info("D-Hull " + id1 + " moved below " + id2);
-                return 1;
-            } else if (!isDHull1 && isDHull2) {
-                //log.info("D-Hull " + id2 + " moved below " + id1);
-                return -1;
-            }
-            if (manufacturerScore1 != manufacturerScore2) { // compare numeric manufacturer score
-                //log.info("Comparing m-score " + id1 + " vs " + id2 + ": " + Integer.compare(manufacturerScore1, manufacturerScore2));
-                return Integer.compare(manufacturerScore1, manufacturerScore2);
-            }
-            if (!manufacturer1.equalsIgnoreCase(manufacturer2)) { // if same score, compare strings (i.e. non-vanilla manufacturers are sorted alphabetically)
-                //log.info("Comparing m-id " + id1 + " vs " + id2 + ": " + manufacturer1.compareToIgnoreCase(manufacturer2));
-                return manufacturer1.compareToIgnoreCase(manufacturer2);
-            }
-            if (sizeScore1 != sizeScore2) {
-                //log.info("Comparing s-score " + id1 + " vs " + id2 + ": " + Integer.compare(sizeScore1, sizeScore2));
-                return Integer.compare(sizeScore1, sizeScore2);
-            }
-            if (DP1 != DP2) {
-                //log.info("Comparing dp " + id1 + " vs " + id2 + ": " + Float.compare(DP1, DP2));
-                return Float.compare(DP1, DP2);
-            }
-            if (!name1.equalsIgnoreCase(name2)) {
-                //log.info("Comparing name " + id1 + " vs " + id2 + ": " + name1.compareToIgnoreCase(name2));
-                return name1.compareToIgnoreCase(name2);
-            }
-            //log.info("Comparing id " + id1 + " vs " + id2 + ": " + id1.compareToIgnoreCase(id2));
-            return id1.compareToIgnoreCase(id2);
-        }
-    };
-
+        return null;
+    }
 }

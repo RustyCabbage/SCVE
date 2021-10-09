@@ -2,6 +2,10 @@
   "SCVE": {
     "fleetPrefix": "SCVE",
     "vanillaTagline": "Vanilla Ships",
+    "modBriefing": "Mod List: ",
+    "modBriefingHL": "**",
+    "modTagline": "%s Ships",
+    "modNoMods": "Error: No Mods Are Adding Ships",
     "enemyTagline": "Target Practice",
     "commonTech": "Common",
   }

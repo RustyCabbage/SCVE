@@ -1,9 +1,9 @@
 {
-  "id":"ShipCatalogVariantEditor",
+  "id":"ShipCatalogVariantEditor-test",
   "name":"~Ship Catalogue / Variant Editor",
   "author":"rubi",
   "utility":"true",
-  "version":"1.3.3",
+  "version":"1.4.0 alpha",
   "description":"Creates test missions for more convenient browsing through ship catalogues / variant editing.",
   "gameVersion":"0.95a-RC15",
   "jars":["jars/SCVE.jar"],

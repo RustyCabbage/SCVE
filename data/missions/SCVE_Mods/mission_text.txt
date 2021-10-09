@@ -1,0 +1,24 @@
+List of mod ships, sorted by tech type, size and DP.
+
+Hold LEFT/RIGHT ARROW while clicking on the mission to switch through the different mods.
+
+Hold Q or W while clicking on the mission to toggle between hiding ships:
+    - all spoilers (HIDE_IN_CODEX) /
+    - major spoilers (restricted) /
+    - no spoilers
+
+Hold A or S while clicking on the mission to toggle between hiding weapons/wings:
+    - heavy filter (this mod's weapons/wings only) /
+    - light filter (this mod's weapon/wings + vanilla) /
+    - default (all mod weapons/wings + vanilla) /
+    - all (including restricted weapons (wings currently glitchy))
+
+Hold Z or X while clicking on the mission to toggle showing/hiding additional hullmods:
+    - default hullmods only /
+    - s-mod integration/removal and extra vents/caps /
+    - s-mods, extra vents/caps and d-mods
+
+Hold SPACE while clicking on the mission to restore default weapon/wing/hullmod availability.
+
+You can find .variant files for the ships you edit in Starsector/saves/missions/SCVE_Mods.
+(Warning: making edits after switching filters/mods may overwrite these files.)
