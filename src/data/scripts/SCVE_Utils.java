@@ -17,8 +17,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class SCVE_Utils {
@@ -26,10 +24,11 @@ public class SCVE_Utils {
     private static final Logger log = Global.getLogger(SCVE_Utils.class);
 
     public static final String
-            //MOD_ID = "ShipCatalogueVariantEditor",
+            MOD_ID = "ShipCatalogueVariantEditor",
             MOD_PREFIX = "SCVE";
     public static final String
-            HULL_SUFFIX = "_Hull";
+            HULL_SUFFIX = "_Hull",
+            SHIP_DATA_PATH = "data/hulls/ship_data.csv";
 
     public static String getString(String id) {
         return Global.getSettings().getString(MOD_PREFIX, id);
@@ -48,7 +47,7 @@ public class SCVE_Utils {
             }
             //modulesSet.addAll(variant.getStationModules().values()); // values() are hull variant ids
         }
-        log.info(modulesSet);
+        //log.info(modulesSet);
         return modulesSet;
     }
 
@@ -81,15 +80,15 @@ public class SCVE_Utils {
                 || blacklist.contains(shipHullSpec.getHullId())
                 || Global.getSettings().getVariant(shipHullSpec.getHullId() + "_Hull").isStation()
                 || (shipHullSpec.getManufacturer().equals(getString("commonTech")) && (!shipHullSpec.hasHullName() || shipHullSpec.getDesignation().isEmpty()))
-                || shipHullSpec.getHullId().equals("shuttlepod")); // fuck it has the same format as SWP arcade ships
+                || shipHullSpec.getHullId().equals("shuttlepod") // frick it has the same format as SWP arcade ships
+                || shipHullSpec.getHullId().startsWith("TAR_")); // literally can't find anything to block Practice Target hulls from the custom mission
     }
 
     public static ListMap<String> getModToHullListMap(Set<String> blacklist) {
-        String shipDataPath = "data/hulls/ship_data.csv";
         try {
             // create ListMap of sources (file paths) to base hulls, mods only
             ListMap<String> sourceToHullListMap = new ListMap<>();
-            JSONArray array = Global.getSettings().getMergedSpreadsheetDataForMod("id", shipDataPath, "starsector-core");
+            JSONArray array = Global.getSettings().getMergedSpreadsheetDataForMod("id", SHIP_DATA_PATH, "starsector-core");
             for (int i = 0; i < array.length(); i++) {
                 JSONObject row = array.getJSONObject(i);
                 String id = row.getString("id");
@@ -106,6 +105,7 @@ public class SCVE_Utils {
                     sourceToHullListMap.add(source, id);
                 }
             }
+            //log.info("sourceToHullListMap: " + sourceToHullListMap);
             // convert ListMap keys from sources to mod IDs
             ListMap<String> modToHullListMap = new ListMap<>();
             for (String source : sourceToHullListMap.keySet()) {
@@ -128,10 +128,9 @@ public class SCVE_Utils {
                 String hullId = shipHullSpec.getHullId();
                 // non-vanilla skins
                 boolean foundBaseHull = false;
-                for (Map.Entry<String, List<String>> entry : modToHullListMap.entrySet()) {
-                    String shipBaseHullSpecId = shipHullSpec.getBaseHullId();
-                    if (entry.getValue().contains(shipBaseHullSpecId)) {
-                        modToHullListMap.add(entry.getKey(), hullId);
+                for (String key : modToHullListMap.keySet()) {
+                    if (modToHullListMap.getList(key).contains(shipHullSpec.getBaseHullId())) {
+                        modToHullListMap.add(key, hullId);
                         foundBaseHull = true;
                         break;
                     }
@@ -153,9 +152,10 @@ public class SCVE_Utils {
                     }
                 }
             }
+            //log.info("modToHullListMap: " + modToHullListMap);
             return modToHullListMap;
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + shipDataPath);
+            log.error("Could not load " + SHIP_DATA_PATH);
         }
         return null;
     }

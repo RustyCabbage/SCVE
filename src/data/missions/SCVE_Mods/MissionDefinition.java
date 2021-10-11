@@ -23,7 +23,31 @@ public class MissionDefinition implements MissionDefinitionPlugin {
     private static boolean firstLoad = true;
     private static int currentSelection;
 
-    // if (returnName), returns mod name, else returns mod id
+    @Override
+    public void defineMission(MissionDefinitionAPI api) {
+        // initialize
+        if (modToHull.size() == 0) {
+            initializeMission(api, getString("modNoMods"));
+            api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
+                    getString("modNoMods"), false);
+        } else {
+            String currentModId = getCurrentMod();
+            String currentModName = Global.getSettings().getModManager().getModSpec(currentModId).getName();
+            initializeMission(api, String.format(getString("modTagline"), currentModName));
+            createModListBriefing(api);
+
+            // don't use api.addFleetMember() because then the ships start at 0 CR
+            boolean flagship = true;
+            for (FleetMemberAPI member : getModFleetMembers(modToHull.getList(currentModId))) {
+                String variantId = member.getVariant().getHullVariantId();
+                FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
+                if (flagship) {
+                    flagship = false;
+                }
+            }
+        }
+    }
+
     public String getCurrentMod() {
         String currentMod = null;
         if (firstLoad) {
@@ -37,7 +61,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         } else if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
             currentSelection--;
             if (currentSelection < 0) {
-                currentSelection = modToHull.size() - 1;
+                currentSelection = Math.max(0,modToHull.size() - 1);
             }
         }
         if (!modToHull.isEmpty()) {
@@ -45,12 +69,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             for (String modId : modToHull.keySet()) {
                 modIdNamePairList.add(new Pair<>(modId,Global.getSettings().getModManager().getModSpec(modId).getName()));
             }
-            Collections.sort(modIdNamePairList, new Comparator<Pair<String, String>>() {
-                @Override
-                public int compare(Pair<String, String> o1, Pair<String, String> o2) {
-                    return o1.two.compareToIgnoreCase(o2.two); //sort by names
-                }
-            });
+            Collections.sort(modIdNamePairList, modComparator);
             currentMod = modIdNamePairList.get(currentSelection).one;
         }
         return currentMod;
@@ -61,12 +80,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         for (String modId : modToHull.keySet()) {
             modIdNamePairList.add(new Pair<>(modId,Global.getSettings().getModManager().getModSpec(modId).getName()));
         }
-        Collections.sort(modIdNamePairList, new Comparator<Pair<String, String>>() {
-            @Override
-            public int compare(Pair<String, String> o1, Pair<String, String> o2) {
-                return o1.two.compareToIgnoreCase(o2.two); //sort by names
-            }
-        });
+        Collections.sort(modIdNamePairList, modComparator);
         String currentMod = modIdNamePairList.get(currentSelection).one;
         ArrayList<String> modList = new ArrayList<>();
         // use names if < 15
@@ -80,7 +94,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     modList.add(modIdNamePair.two);
                 }
             }
-        // else use ids
+            // else use ids
         } else {
             for (Pair<String, String> modIdNamePair : modIdNamePairList) {
                 if (currentMod.equals(modIdNamePair.one)) {
@@ -107,27 +121,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         return fleetMemberSet;
     }
 
-    @Override
-    public void defineMission(MissionDefinitionAPI api) {
-        // initialize
-        String currentModId = getCurrentMod();
-        if (currentModId == null) {
-            initializeMission(api, getString("modNoMods"));
-            api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP, getString("modNoMods"), false);
-        } else {
-            String currentModName = Global.getSettings().getModManager().getModSpec(currentModId).getName();
-            initializeMission(api, String.format(getString("modTagline"), currentModName));
-            createModListBriefing(api);
+    Comparator<Pair<String, String>> modComparator = new Comparator<Pair<String, String>>() {
+        @Override
+        public int compare(Pair<String, String> o1, Pair<String, String> o2) {
+            return o1.two.compareToIgnoreCase(o2.two); //sort by names
         }
-
-        // don't use api.addFleetMember() because then the ships start at 0 CR
-        boolean flagship = true;
-        for (FleetMemberAPI member : getModFleetMembers(modToHull.getList(currentModId))) {
-            String variantId = member.getVariant().getHullVariantId();
-            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
-            if (flagship) {
-                flagship = false;
-            }
-        }
-    }
+    };
 }

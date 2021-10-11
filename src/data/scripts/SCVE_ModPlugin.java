@@ -19,6 +19,8 @@ public class SCVE_ModPlugin extends BaseModPlugin {
     @Override
     public void onApplicationLoad() {
         allModules = getAllModules();
+        //log.info("Loaded allModules: " + allModules);
         modToHull = getModToHullListMap(allModules);
+        //log.info("Loaded modToHull: " + modToHull);
     }
 }

@@ -6,6 +6,9 @@
     "modBriefingHL": "**",
     "modTagline": "%s Ships",
     "modNoMods": "Error: No Mods Are Adding Ships",
+    "customBriefing": "Filter List: ",
+    "customTagline": "Custom Ships",
+    "customNoFilters": "Error: No Filters Set",
     "enemyTagline": "Target Practice",
     "commonTech": "Common",
   }

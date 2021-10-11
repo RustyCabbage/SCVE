@@ -20,6 +20,22 @@ public class MissionDefinition implements MissionDefinitionPlugin {
 
     private final Logger log = Global.getLogger(MissionDefinition.class);
 
+    @Override
+    public void defineMission(MissionDefinitionAPI api) {
+        // initialize
+        initializeMission(api, getString("vanillaTagline"));
+
+        boolean flagship = true;
+        for (FleetMemberAPI member : getVanillaFleetMembers(allModules)) {
+            // don't use api.addFleetMember() because then the ships start at 0 CR
+            String variantId = member.getVariant().getHullVariantId();
+            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
+            if (flagship) {
+                flagship = false;
+            }
+        }
+    }
+
     // this method is simpler for grabbing vanilla ships than relying on the listMap
     public static Set<FleetMemberAPI> getVanillaFleetMembers(Set<String> blacklist) {
         Set<FleetMemberAPI> fleetMemberSet = new TreeSet<>(SCVE_ComparatorUtils.memberComparator);
@@ -31,23 +47,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             }
         }
         return fleetMemberSet;
-    }
-
-    @Override
-    public void defineMission(MissionDefinitionAPI api) {
-        // initialize
-        initializeMission(api, getString("vanillaTagline"));
-
-
-        boolean flagship = true;
-        for (FleetMemberAPI member : getVanillaFleetMembers(allModules)) {
-            // don't use api.addFleetMember() because then the ships start at 0 CR
-            String variantId = member.getVariant().getHullVariantId();
-            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
-            if (flagship) {
-                flagship = false;
-            }
-        }
     }
 
     // used Set<FleetMemberAPI> getVanillaFleetMembers(Set<String> blacklist) instead because it's hard to grab DP with just the variant
