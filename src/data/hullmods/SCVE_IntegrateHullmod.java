@@ -69,13 +69,8 @@ public class SCVE_IntegrateHullmod extends BaseHullMod {
             String id = hullmods.get(hullmods.size() - 1);
             lastHullmod = Global.getSettings().getHullModSpec(id).getDisplayName();
         }
-        String message = "";
-        if (lastHullmod != null) {
-            message = "Will s-mod: " + lastHullmod + ".";
-        }
-
         if (index == 0) {
-            return message;
+            return lastHullmod;
         }
         return null;
     }

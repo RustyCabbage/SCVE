@@ -348,6 +348,7 @@ public class SCVE_FilterUtils {
         switch (filterLevel) {
             case 1: // s-mods
                 for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                    log.info(hullModSpec);
                     if (hullModSpec.getId().startsWith(MOD_PREFIX)) {
                         hullModSpec.setHidden(false);
                         hullModSpec.setHiddenEverywhere(false);
