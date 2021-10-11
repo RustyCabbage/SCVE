@@ -13,7 +13,7 @@ import org.apache.log4j.Logger;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static data.scripts.SCVE_ModPlugin.allModules;
+import static data.scripts.SCVE_FilterUtils.*;
 import static data.scripts.SCVE_Utils.*;
 
 public class MissionDefinition implements MissionDefinitionPlugin {
@@ -23,10 +23,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
     @Override
     public void defineMission(MissionDefinitionAPI api) {
         // initialize
-        initializeMission(api, getString("vanillaTagline"));
+        initializeMission(api, getString("vanillaTagline"), null);
 
         boolean flagship = true;
-        for (FleetMemberAPI member : getVanillaFleetMembers(allModules)) {
+        for (FleetMemberAPI member : getVanillaFleetMembers(blacklistedShips)) {
             // don't use api.addFleetMember() because then the ships start at 0 CR
             String variantId = member.getVariant().getHullVariantId();
             FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);

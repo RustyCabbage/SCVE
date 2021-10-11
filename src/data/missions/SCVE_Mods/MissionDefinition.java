@@ -13,6 +13,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.util.*;
 
+import static data.scripts.SCVE_FilterUtils.blacklistedShips;
 import static data.scripts.SCVE_ModPlugin.modToHull;
 import static data.scripts.SCVE_Utils.*;
 
@@ -27,18 +28,21 @@ public class MissionDefinition implements MissionDefinitionPlugin {
     public void defineMission(MissionDefinitionAPI api) {
         // initialize
         if (modToHull.size() == 0) {
-            initializeMission(api, getString("modNoMods"));
+            initializeMission(api, getString("modNoMods"), null);
             api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
                     getString("modNoMods"), false);
         } else {
+            createModListBriefing(api);
             String currentModId = getCurrentMod();
             String currentModName = Global.getSettings().getModManager().getModSpec(currentModId).getName();
-            initializeMission(api, String.format(getString("modTagline"), currentModName));
-            createModListBriefing(api);
+            initializeMission(api, String.format(getString("modTagline"), currentModName), currentModId);
+
+            List<String> shipList = modToHull.getList(currentModId);
+            shipList.removeAll(blacklistedShips);
 
             // don't use api.addFleetMember() because then the ships start at 0 CR
             boolean flagship = true;
-            for (FleetMemberAPI member : getModFleetMembers(modToHull.getList(currentModId))) {
+            for (FleetMemberAPI member : getModFleetMembers(shipList)) {
                 String variantId = member.getVariant().getHullVariantId();
                 FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
                 if (flagship) {

@@ -28,7 +28,7 @@ public class SCVE_Utils {
             MOD_PREFIX = "SCVE";
     public static final String
             HULL_SUFFIX = "_Hull",
-            SHIP_DATA_PATH = "data/hulls/ship_data.csv";
+            SHIP_DATA_CSV = "data/hulls/ship_data.csv";
 
     public static String getString(String id) {
         return Global.getSettings().getString(MOD_PREFIX, id);
@@ -51,7 +51,7 @@ public class SCVE_Utils {
         return modulesSet;
     }
 
-    public static void initializeMission(MissionDefinitionAPI api, String playerTagline) {
+    public static void initializeMission(MissionDefinitionAPI api, String playerTagline, String modId) {
         String fleetPrefix = getString("fleetPrefix");
         //String playerTagline = getString("vanillaTagline");
         String enemyTagLine = getString("enemyTagline");
@@ -62,10 +62,7 @@ public class SCVE_Utils {
         api.setFleetTagline(FleetSide.ENEMY, enemyTagLine);
         api.addToFleet(FleetSide.ENEMY, "atlas_Standard", FleetMemberType.SHIP, true);
         api.initMap(-mapSize / 2f, mapSize / 2f, -mapSize / 2f, mapSize / 2f);
-    }
-
-    public static void createFilterBriefing(MissionDefinitionAPI api) {
-
+        SCVE_FilterUtils.switchFilter(api, modId);
     }
 
     public static boolean validateHullSpec(ShipHullSpecAPI shipHullSpec, Set<String> blacklist) {
@@ -88,7 +85,7 @@ public class SCVE_Utils {
         try {
             // create ListMap of sources (file paths) to base hulls, mods only
             ListMap<String> sourceToHullListMap = new ListMap<>();
-            JSONArray array = Global.getSettings().getMergedSpreadsheetDataForMod("id", SHIP_DATA_PATH, "starsector-core");
+            JSONArray array = Global.getSettings().getMergedSpreadsheetDataForMod("id", SHIP_DATA_CSV, "starsector-core");
             for (int i = 0; i < array.length(); i++) {
                 JSONObject row = array.getJSONObject(i);
                 String id = row.getString("id");
@@ -155,7 +152,7 @@ public class SCVE_Utils {
             //log.info("modToHullListMap: " + modToHullListMap);
             return modToHullListMap;
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + SHIP_DATA_PATH);
+            log.error("Could not load " + SHIP_DATA_CSV);
         }
         return null;
     }

@@ -20,7 +20,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.*;
 
-import static data.scripts.SCVE_ModPlugin.allModules;
+import static data.scripts.SCVE_FilterUtils.blacklistedShips;
 import static data.scripts.SCVE_Utils.*;
 
 public class MissionDefinition implements MissionDefinitionPlugin {
@@ -38,17 +38,17 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         // initialize
         ArrayList<String> filterList = createFilterListBriefing(api);
         if (filterList.isEmpty()) {
-            initializeMission(api, getString("customNoFilters"));
+            initializeMission(api, getString("customNoFilters"), null);
             api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
                     getString("customNoFilters"), false);
             return;
         } else {
-            initializeMission(api, getString("customTagline"));
+            initializeMission(api, getString("customTagline"), null);
         }
 
         Set<FleetMemberAPI> validShipsSet = new TreeSet<>(SCVE_ComparatorUtils.memberComparator);
         try {
-            JSONArray shipCSV = Global.getSettings().getMergedSpreadsheetDataForMod("id", SHIP_DATA_PATH, "starsector-core");
+            JSONArray shipCSV = Global.getSettings().getMergedSpreadsheetDataForMod("id", SHIP_DATA_CSV, "starsector-core");
             JSONArray customCSV = Global.getSettings().loadCSV(CUSTOM_DATA_PATH);
             // base hulls
             for (int i = 0; i < shipCSV.length(); i++) {
@@ -58,7 +58,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     continue;
                 }
                 ShipHullSpecAPI shipHullSpec = Global.getSettings().getHullSpec(id);
-                if (validateHullSpec(shipHullSpec, allModules)) {
+                if (validateHullSpec(shipHullSpec, blacklistedShips)) {
                     // get special stats
                     hullIdToSpecialStatsMap.put(id, new Pair<>(shipRow.getString("system id"), (float) shipRow.getDouble("mass")));
                     // check if valid member
@@ -86,7 +86,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             }
             // skins
             for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
-                if (shipHullSpec.isBaseHull() || !(validateHullSpec(shipHullSpec, allModules))) { // skip base hulls and modules/stations
+                if (shipHullSpec.isBaseHull() || !(validateHullSpec(shipHullSpec, blacklistedShips))) { // skip base hulls and modules/stations
                     continue;
                 }
                 String id = shipHullSpec.getHullId();
@@ -125,7 +125,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 }
             }
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + SHIP_DATA_PATH + " or " + CUSTOM_DATA_PATH);
+            log.error("Could not load " + SHIP_DATA_CSV + " or " + CUSTOM_DATA_PATH);
         }
 
         boolean flagship = true;

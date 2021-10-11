@@ -11,5 +11,21 @@
     "customNoFilters": "Error: No Filters Set",
     "enemyTagline": "Target Practice",
     "commonTech": "Common",
+    "filterHeavy": "HEAVY",
+    "filterLight": "LIGHT",
+    "filterNone": "NONE",
+    "filterDefault": "DEFAULT",
+    "filterSMods": "S-MODS",
+    "filterDMods": "D-MODS",
+    "filterAllMods": "ALL MODS",
+    "filterBriefingS": "Ships Filtered: ",
+    "filterBriefingW": "Weapons/Wings Filtered: ",
+    "filterBriefingH": "Extra Hullmods: ",
+    "filterBriefingBreak": " | ",
+    "hullModCampaignError": "This hull mod should not show up in campaign. Please report this issue to rubi#0864",
+    "hullModNoHullMods": "Ship has no hullmods to build in",
+    "hullModNoPermaMods": "Ship has no removable perma-mods",
+
+
   }
 }
