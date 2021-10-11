@@ -15,7 +15,7 @@ Hold Z or X while clicking on the mission to toggle showing/hiding additional hu
     - default hullmods only /
     - show add/remove perma-mod hullmods /
     - show d-mods /
-	- show all hidden mods
+    - show all hidden mods
 
 Hold SPACE while clicking on the mission to restore default weapon/wing/hullmod availability.
 
