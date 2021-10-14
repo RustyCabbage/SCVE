@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static data.scripts.SCVE_ComparatorUtils.memberComparator;
 import static data.scripts.SCVE_FilterUtils.*;
 import static data.scripts.SCVE_Utils.*;
 
@@ -38,7 +39,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
 
     // this method is simpler for grabbing vanilla ships than relying on the listMap
     public static Set<FleetMemberAPI> getVanillaFleetMembers(Set<String> blacklist) {
-        Set<FleetMemberAPI> fleetMemberSet = new TreeSet<>(SCVE_ComparatorUtils.memberComparator);
+        Set<FleetMemberAPI> fleetMemberSet = new TreeSet<>(memberComparator);
         for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
             if (!shipHullSpec.getShipFilePath().startsWith("data") && validateHullSpec(shipHullSpec, blacklist)) {
                 String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
@@ -49,10 +50,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         return fleetMemberSet;
     }
 
-    // used Set<FleetMemberAPI> getVanillaFleetMembers(Set<String> blacklist) instead because it's hard to grab DP with just the variant
+    /* used Set<FleetMemberAPI> getVanillaFleetMembers(Set<String> blacklist) instead because it's hard to grab DP with just the variant
     @Deprecated
     public static Set<String> getVanillaVariantIds(Set<String> blacklist) {
-        Set<String> variantIdSet = new TreeSet<>(SCVE_ComparatorUtils.variantComparator);
+        Set<String> variantIdSet = new TreeSet<>(variantComparator);
         for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
             if (!shipHullSpec.getShipFilePath().startsWith("data") && validateHullSpec(shipHullSpec, blacklist)) {
                 String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
@@ -61,4 +62,5 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         }
         return variantIdSet;
     }
+    */
 }

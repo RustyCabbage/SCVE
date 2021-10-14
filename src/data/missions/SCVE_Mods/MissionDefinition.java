@@ -13,6 +13,7 @@ import org.lwjgl.input.Keyboard;
 
 import java.util.*;
 
+import static data.scripts.SCVE_ComparatorUtils.memberComparator;
 import static data.scripts.SCVE_FilterUtils.blacklistedShips;
 import static data.scripts.SCVE_ModPlugin.modToHull;
 import static data.scripts.SCVE_Utils.*;
@@ -37,12 +38,13 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             String currentModName = Global.getSettings().getModManager().getModSpec(currentModId).getName();
             initializeMission(api, String.format(getString("modTagline"), currentModName), currentModId);
 
-            List<String> shipList = modToHull.getList(currentModId);
+            List<String> shipList = new ArrayList<>(modToHull.getList(currentModId)); // make new ship list so removing doesn't affect the original list
             shipList.removeAll(blacklistedShips);
 
             // don't use api.addFleetMember() because then the ships start at 0 CR
             boolean flagship = true;
             for (FleetMemberAPI member : getModFleetMembers(shipList)) {
+                log.info(member.getHullId());
                 String variantId = member.getVariant().getHullVariantId();
                 FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
                 if (flagship) {
@@ -116,7 +118,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
     }
 
     public static Set<FleetMemberAPI> getModFleetMembers(List<String> modShipIds) {
-        Set<FleetMemberAPI> fleetMemberSet = new TreeSet<>(SCVE_ComparatorUtils.memberComparator);
+        Set<FleetMemberAPI> fleetMemberSet = new TreeSet<>(memberComparator);
         for (String hullId : modShipIds) {
             String hullVariantId = hullId + HULL_SUFFIX;
             FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId);

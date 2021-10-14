@@ -20,6 +20,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.*;
 
+import static data.scripts.SCVE_ComparatorUtils.memberComparator;
 import static data.scripts.SCVE_FilterUtils.blacklistedShips;
 import static data.scripts.SCVE_Utils.*;
 
@@ -35,6 +36,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
 
     @Override
     public void defineMission(MissionDefinitionAPI api) {
+
         // initialize
         ArrayList<String> filterList = createFilterListBriefing(api);
         if (filterList.isEmpty()) {
@@ -46,7 +48,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             initializeMission(api, getString("customTagline"), null);
         }
 
-        Set<FleetMemberAPI> validShipsSet = new TreeSet<>(SCVE_ComparatorUtils.memberComparator);
+        Set<FleetMemberAPI> validShipsSet = new TreeSet<>(memberComparator);
         try {
             JSONArray shipCSV = Global.getSettings().getMergedSpreadsheetDataForMod("id", SHIP_DATA_CSV, "starsector-core");
             JSONArray customCSV = Global.getSettings().loadCSV(CUSTOM_DATA_PATH);
