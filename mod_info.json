@@ -3,7 +3,7 @@
   "name":"~Ship Catalogue / Variant Editor",
   "author":"rubi",
   "utility":"true",
-  "version":"1.4.1",
+  "version":"1.4.2",
   "description":"Creates test missions for more convenient browsing through ship catalogues / variant editing.",
   "gameVersion":"0.95a-RC15",
   "jars":["jars/SCVE.jar"],

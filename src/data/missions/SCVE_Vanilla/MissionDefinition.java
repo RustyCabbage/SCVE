@@ -7,14 +7,13 @@ import com.fs.starfarer.api.fleet.FleetMemberType;
 import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin;
-import data.scripts.SCVE_ComparatorUtils;
 import org.apache.log4j.Logger;
 
 import java.util.Set;
 import java.util.TreeSet;
 
 import static data.scripts.SCVE_ComparatorUtils.memberComparator;
-import static data.scripts.SCVE_FilterUtils.*;
+import static data.scripts.SCVE_FilterUtils.blacklistedShips;
 import static data.scripts.SCVE_Utils.*;
 
 public class MissionDefinition implements MissionDefinitionPlugin {
@@ -43,7 +42,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
             if (!shipHullSpec.getShipFilePath().startsWith("data") && validateHullSpec(shipHullSpec, blacklist)) {
                 String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
-                FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId); // need to repair...
+                FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId);
                 fleetMemberSet.add(member);
             }
         }

@@ -6,7 +6,7 @@ Hold Q or W while clicking on the mission to toggle between hiding ships:
     - no filter
 
 Hold A or S while clicking on the mission to toggle between hiding weapons/wings:
-    - heavy filter (vanilla only) /
+    - heavy filter (none) /
     - light filter (vanilla only) /
     - default (all mod weapons/wings + vanilla) /
     - no filter (including restricted weapons (wings currently glitchy))

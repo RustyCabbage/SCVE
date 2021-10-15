@@ -7,7 +7,6 @@ import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin;
 import com.fs.starfarer.api.util.Pair;
-import data.scripts.SCVE_ComparatorUtils;
 import org.apache.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 
@@ -33,9 +32,9 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
                     getString("modNoMods"), false);
         } else {
-            createModListBriefing(api);
             String currentModId = getCurrentMod();
             String currentModName = Global.getSettings().getModManager().getModSpec(currentModId).getName();
+            createModListBriefing(api);
             initializeMission(api, String.format(getString("modTagline"), currentModName), currentModId);
 
             List<String> shipList = new ArrayList<>(modToHull.getList(currentModId)); // make new ship list so removing doesn't affect the original list
@@ -44,7 +43,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             // don't use api.addFleetMember() because then the ships start at 0 CR
             boolean flagship = true;
             for (FleetMemberAPI member : getModFleetMembers(shipList)) {
-                log.info(member.getHullId());
                 String variantId = member.getVariant().getHullVariantId();
                 FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
                 if (flagship) {

@@ -2,23 +2,18 @@ package data.scripts;
 
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.combat.ShipHullSpecAPI;
-import com.fs.starfarer.api.combat.WeaponAPI;
 import com.fs.starfarer.api.impl.campaign.ids.Tags;
 import com.fs.starfarer.api.loading.FighterWingSpecAPI;
 import com.fs.starfarer.api.loading.HullModSpecAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.util.vector.Vector3f;
 
-import java.io.IOException;
 import java.util.*;
 
-import static data.scripts.SCVE_ModPlugin.allModules;
+import static data.scripts.SCVE_ModPlugin.*;
 import static data.scripts.SCVE_Utils.*;
 
 public class SCVE_FilterUtils {
@@ -223,15 +218,100 @@ public class SCVE_FilterUtils {
     }
 
     public static void filterWeaponsAndWings(int filterLevel, String modId) {
-        String VANILLA_WEAPONS_BACKUP = "data/config/SCVE/weapon_data_backup.csv";
-        String VANILLA_WINGS_BACKUP = "data/config/SCVE/wing_data_backup.csv";
-        String WEAPON_DATA_CSV = "data/weapons/weapon_data.csv";
-        String WING_DATA_CSV = "data/hulls/wing_data.csv";
-        Set<String> vanillaWeapons = new HashSet<>();
-        Set<String> vanillaWings = new HashSet<>();
         if (modId == null) {
             modId = "null"; // vanilla sources start with null
         }
+        switch (filterLevel) {
+            case 0: // only weapons/wings from the mod
+                for (WeaponSpecAPI weaponSpec : Global.getSettings().getAllWeaponSpecs()) {
+                    if (modToWeapon.getList(modId).contains(weaponSpec.getWeaponId())) {
+                        continue;
+                    }
+                    weaponSpec.addTag(Tags.RESTRICTED);
+                }
+                for (FighterWingSpecAPI wingSpec : Global.getSettings().getAllFighterWingSpecs()) {
+                    if (modToWing.getList(modId).contains(wingSpec.getId())) {
+                        continue;
+                    }
+                    wingSpec.setOpCost(100000);
+                }
+                break;
+            case 1: // only weapons/wings from the mod and vanilla
+                for (WeaponSpecAPI weaponSpec : Global.getSettings().getAllWeaponSpecs()) {
+                    if (modToWeapon.getList(modId).contains(weaponSpec.getWeaponId())
+                            || modToWeapon.getList(VANILLA_CATEGORY).contains(weaponSpec.getWeaponId())) {
+                        continue;
+                    }
+                    weaponSpec.addTag(Tags.RESTRICTED);
+                }
+                for (FighterWingSpecAPI wingSpec : Global.getSettings().getAllFighterWingSpecs()) {
+                    if (modToWing.getList(modId).contains(wingSpec.getId())
+                            || modToWing.getList(VANILLA_CATEGORY).contains(wingSpec.getId())) {
+                        continue;
+                    }
+                    wingSpec.setOpCost(100000);
+                }
+                break;
+            case 3: // show all weapons, including restricted ones
+                for (WeaponSpecAPI weaponSpec : Global.getSettings().getAllWeaponSpecs()) {
+                    weaponSpec.getTags().remove(Tags.RESTRICTED);
+                }
+                for (FighterWingSpecAPI wingSpec : Global.getSettings().getAllFighterWingSpecs()) {
+                    wingSpec.getTags().remove(Tags.RESTRICTED);
+                }
+                break;
+            default: // case 2: default settings
+                break;
+        }
+    }
+
+    public static void addExtraHullMods(int filterLevel) {
+        switch (filterLevel) {
+            case 1: // s-mods
+                for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                    if (hullModSpec.getId().startsWith(MOD_PREFIX)) {
+                        hullModSpec.setHidden(false);
+                        hullModSpec.setHiddenEverywhere(false);
+                        hullModSpec.setDisplayName("{" + hullModSpec.getDisplayName() + "}");
+                    }
+                }
+                break;
+            case 2: // d-mods
+                for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                    if (hullModSpec.hasTag(Tags.HULLMOD_DMOD)) {
+                        hullModSpec.getTags().remove(Tags.HULLMOD_DMOD);
+                        hullModSpec.setHidden(false);
+                        hullModSpec.addUITag("{D-Mod}");
+                        hullModSpec.setDisplayName("{" + hullModSpec.getDisplayName() + "}");
+                    }
+                }
+                break;
+            case 3: // all mods todo: see if I need to reset these UI tags
+                for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                    if (hullModSpec.isHidden()) {
+                        hullModSpec.setHidden(false);
+                        hullModSpec.addUITag("{Hidden}");
+                        hullModSpec.setDisplayName("{" + hullModSpec.getDisplayName() + "}");
+                        if (hullModSpec.hasTag(Tags.HULLMOD_DMOD)) {
+                            hullModSpec.getTags().remove(Tags.HULLMOD_DMOD);
+                            hullModSpec.addUITag("{D-Mod}");
+                            hullModSpec.setDisplayName("{" + hullModSpec.getDisplayName() + "}");
+                        }
+                    }
+                }
+                break;
+            default: // case 0
+                break;
+        }
+    }
+}
+
+        /* breaks because the game doesn't crash when you have an entry in weapon_data.csv but no .weapon file.
+        // also, I am keeping this in case I need to cannibalize it later
+        String VANILLA_WEAPONS_BACKUP = "data/config/SCVE/weapon_data_backup.csv";
+        String VANILLA_WINGS_BACKUP = "data/config/SCVE/wing_data_backup.csv";
+        Set<String> vanillaWeapons = new HashSet<>();
+        Set<String> vanillaWings = new HashSet<>();
         // load from backup so that we don't have cases where people adjust the stats of these things hence they don't show up
         try {
             JSONArray vanillaWeaponCSV = Global.getSettings().loadCSV(VANILLA_WEAPONS_BACKUP);
@@ -257,17 +337,19 @@ public class SCVE_FilterUtils {
         }
         switch (filterLevel) {
             case 0: // only weapons/wings from that mod
-                log.info("------------------------" + modId);
                 try {
                     JSONArray allWeaponsCSV = Global.getSettings().getMergedSpreadsheetDataForMod("id", WEAPON_DATA_CSV, "starsector-core");
                     for (int k = 0; k < allWeaponsCSV.length(); k++) {
                         JSONObject weaponRow = allWeaponsCSV.getJSONObject(k);
                         String weaponId = weaponRow.getString("id");
                         String opCost = weaponRow.getString("OPs");
+                        String hints = weaponRow.getString("hints");
                         String weaponSource = weaponRow.getString("fs_rowSource");
+                        // don't add restricted tag to any weapon that is from this mod
                         if (weaponId.isEmpty()
                                 || opCost.isEmpty()
-                                || weaponSource.contains((modId.equals("null")) ? modId : Global.getSettings().getModManager().getModSpec(modId).getPath())
+                                || hints.contains("SYSTEM")
+                                || weaponSource.contains((modId.equals("null") ? modId : Global.getSettings().getModManager().getModSpec(modId).getPath()))
                         ) {
                             continue;
                         }
@@ -275,7 +357,6 @@ public class SCVE_FilterUtils {
                         if (weaponSpec.getAIHints().contains(WeaponAPI.AIHints.SYSTEM)) {
                             continue;
                         }
-                        log.info(weaponId);
                         weaponSpec.addTag(Tags.RESTRICTED);
                     }
                     JSONArray allWingsCSV = Global.getSettings().getMergedSpreadsheetDataForMod("id", WING_DATA_CSV, "starsector-core");
@@ -342,45 +423,4 @@ public class SCVE_FilterUtils {
             default: // case 2: default settings
                 break;
         }
-    }
-
-    public static void addExtraHullMods(int filterLevel) {
-        switch (filterLevel) {
-            case 1: // s-mods
-                for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
-                    log.info(hullModSpec);
-                    if (hullModSpec.getId().startsWith(MOD_PREFIX)) {
-                        hullModSpec.setHidden(false);
-                        hullModSpec.setHiddenEverywhere(false);
-                    }
-                }
-                break;
-            case 2: // d-mods
-                for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
-                    if (hullModSpec.hasTag(Tags.HULLMOD_DMOD)) {
-                        hullModSpec.getTags().remove(Tags.HULLMOD_DMOD);
-                        hullModSpec.setHidden(false);
-                        hullModSpec.addUITag("{D-Mod}");
-                        hullModSpec.setDisplayName("{" + hullModSpec.getDisplayName() + "}");
-                    }
-                }
-                break;
-            case 3: // all mods todo: see if I need to reset these UI tags
-                for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
-                    if (hullModSpec.isHidden()) {
-                        hullModSpec.setHidden(false);
-                        hullModSpec.addUITag("{Hidden}");
-                        hullModSpec.setDisplayName("{" + hullModSpec.getDisplayName() + "}");
-                        if (hullModSpec.hasTag(Tags.HULLMOD_DMOD)) {
-                            hullModSpec.getTags().remove(Tags.HULLMOD_DMOD);
-                            hullModSpec.addUITag("{D-Mod}");
-                            hullModSpec.setDisplayName("{" + hullModSpec.getDisplayName() + "}");
-                        }
-                    }
-                }
-                break;
-            default: // case 0
-                break;
-        }
-    }
-}
+         */
