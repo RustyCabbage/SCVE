@@ -24,7 +24,7 @@ public class SCVE_Utils {
     private static final Logger log = Global.getLogger(SCVE_Utils.class);
 
     public static final String
-            MOD_ID = "ShipCatalogueVariantEditor",
+            //MOD_ID = "ShipCatalogueVariantEditor",
             MOD_PREFIX = "SCVE",
             VANILLA_CATEGORY = "SCVE_Vanilla",
             HULL_SUFFIX = "_Hull",
@@ -161,7 +161,7 @@ public class SCVE_Utils {
             //log.info("modToHullListMap: " + modToHullListMap);
             return modToHullListMap;
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + SHIP_DATA_CSV);
+            log.error("Could not load " + SHIP_DATA_CSV, e);
         }
         return null;
     }
@@ -206,7 +206,7 @@ public class SCVE_Utils {
             }
             return modToWeaponListMap;
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + WEAPON_DATA_CSV);
+            log.error("Could not load " + WEAPON_DATA_CSV, e);
         }
         return null;
     }
@@ -244,7 +244,7 @@ public class SCVE_Utils {
             }
             return modToWingListMap;
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + WING_DATA_CSV);
+            log.error("Could not load " + WING_DATA_CSV, e);
         }
         return null;
     }

@@ -1,16 +1,22 @@
 package data.scripts;
 
 import com.fs.starfarer.api.Global;
+import com.fs.starfarer.api.campaign.CampaignFleetAPI;
+import com.fs.starfarer.api.combat.MutableShipStatsAPI;
 import com.fs.starfarer.api.combat.ShipHullSpecAPI;
+import com.fs.starfarer.api.fleet.FleetMemberAPI;
+import com.fs.starfarer.api.impl.campaign.ids.Factions;
 import com.fs.starfarer.api.impl.campaign.ids.Tags;
-import com.fs.starfarer.api.loading.FighterWingSpecAPI;
-import com.fs.starfarer.api.loading.HullModSpecAPI;
-import com.fs.starfarer.api.loading.WeaponSpecAPI;
+import com.fs.starfarer.api.loading.*;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.util.vector.Vector3f;
 
+import java.io.IOException;
 import java.util.*;
 
 import static data.scripts.SCVE_ModPlugin.*;
@@ -31,6 +37,8 @@ public class SCVE_FilterUtils {
     public static HashMap<String, Float> ORIGINAL_WING_OP_COST_MAP = new HashMap<>();
     public static HashMap<String, ArrayList<Boolean>> ORIGINAL_HULLMOD_QUALITIES_MAP = new HashMap<>();
     public static HashMap<String, String> ORIGINAL_HULLMOD_NAMES_MAP = new HashMap<>();
+    public static String CUSTOM_WEAPONS_PATH = "custom_wep_filter.csv";
+    public static String CUSTOM_WINGS_PATH = "custom_wing_filter.csv";
 
     public static void getOriginalData() {
         for (WeaponSpecAPI weapon : Global.getSettings().getAllWeaponSpecs()) {
@@ -90,6 +98,7 @@ public class SCVE_FilterUtils {
      1 = block all mod weapons not from the mod
      2 = default (block restricted weapons)
      3 = allow all weapons
+     4 = custom filter
 
      Z - hullmod filter left
      X - hullmod filter right
@@ -98,6 +107,7 @@ public class SCVE_FilterUtils {
      2 - show d-mods
      3 - show all hullmods
      */
+    // todo separate weapons and wings?
     public static Vector3f switchFilter(MissionDefinitionAPI api, String modId) {
         restoreOriginalData(true, true, true);
         if (globalFirstLoad || Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
@@ -119,11 +129,11 @@ public class SCVE_FilterUtils {
         if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
             weaponWingFilter--;
             if (weaponWingFilter < 0) {
-                weaponWingFilter = 3;
+                weaponWingFilter = 4;
             }
         } else if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
             weaponWingFilter++;
-            if (weaponWingFilter > 3) {
+            if (weaponWingFilter > 4) {
                 weaponWingFilter = 0;
             }
         }
@@ -171,6 +181,10 @@ public class SCVE_FilterUtils {
                 break;
             case 3:
                 weaponWingFilterText = getString("filterNone");
+                break;
+            case 4:
+                weaponWingFilterText = getString("filterCustom");
+                break;
             default: // case 2
                 break;
         }
@@ -260,6 +274,9 @@ public class SCVE_FilterUtils {
                     wingSpec.getTags().remove(Tags.RESTRICTED);
                 }
                 break;
+            case 4: // use weapon and wing filter
+                loadCustomWeaponsAndWingsFilter();
+                break;
             default: // case 2: default settings
                 break;
         }
@@ -304,6 +321,569 @@ public class SCVE_FilterUtils {
                 break;
         }
     }
+
+    public static void loadCustomWeaponsAndWingsFilter() {
+        try {
+            JSONArray customWeaponCSV = Global.getSettings().loadCSV(CUSTOM_WEAPONS_PATH);
+            for (WeaponSpecAPI weaponSpec : Global.getSettings().getAllWeaponSpecs()) {
+                for (int j = 0; j < customWeaponCSV.length(); j++) {
+                    JSONObject customRow = customWeaponCSV.getJSONObject(j);
+                    String parameter = customRow.getString("parameter");
+                    String operator = customRow.getString("operator");
+                    String value = customRow.getString("value");
+                    if (parameter.equals("showRestricted")) {
+                        boolean showRestricted = Boolean.parseBoolean(value);
+                        if (showRestricted) {
+                            weaponSpec.getTags().remove(Tags.RESTRICTED);
+                        }
+                    }
+                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
+                        continue;
+                    }
+                    if (!validateWeaponStat(weaponSpec.getWeaponId(), parameter, operator, value)) {
+                        weaponSpec.addTag(Tags.RESTRICTED);
+                        break;
+                    }
+                }
+            }
+            JSONArray customWingCSV = Global.getSettings().loadCSV(CUSTOM_WINGS_PATH);
+            for (FighterWingSpecAPI wingSpec : Global.getSettings().getAllFighterWingSpecs()) {
+                for (int j = 0; j < customWingCSV.length(); j++) {
+                    JSONObject customRow = customWingCSV.getJSONObject(j);
+                    String parameter = customRow.getString("parameter");
+                    String operator = customRow.getString("operator");
+                    String value = customRow.getString("value");
+                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
+                        continue;
+                    }
+                    if (!validateWingStat(wingSpec.getId(), parameter, operator, value)) {
+                        wingSpec.addTag(Tags.RESTRICTED);
+                        break;
+                    }
+                }
+            }
+        } catch (IOException | JSONException e) {
+            log.error("Could not load " + CUSTOM_WEAPONS_PATH + " or " + CUSTOM_WINGS_PATH, e);
+        }
+
+    }
+
+    public static boolean validateWeaponStat(String weaponId, String stat, String operator, String value) {
+        WeaponSpecAPI weaponSpec = Global.getSettings().getWeaponSpec(weaponId);
+        String stringToCheck = "";
+        float floatToCheck = Float.NaN, lower, upper;
+        List<String> arrayToCheck = new ArrayList<>();
+        boolean valid = false;
+        switch (stat) {
+            // STRINGS
+            case "id":
+                stringToCheck = weaponId;
+                break;
+            case "name":
+                stringToCheck = weaponSpec.getWeaponName();
+                break;
+            case "tech/manufacturer":
+                stringToCheck = weaponSpec.getManufacturer();
+                break;
+            case "size":
+                stringToCheck = weaponSpec.getSize().toString();
+                break;
+            case "mount type":
+                stringToCheck = weaponSpec.getMountType().toString();
+                break;
+            case "damage type":
+                stringToCheck = weaponSpec.getDamageType().toString();
+                break;
+            /* weapon grouping
+            case "groupTag":
+                stringToCheck = weaponSpec.getWeaponGroupTag();
+                break;
+             */
+            case "primaryRoleStr":
+                stringToCheck = weaponSpec.getPrimaryRoleStr();
+                break;
+            case "speedStr":
+                stringToCheck = weaponSpec.getSpeedStr();
+                break;
+            case "trackingStr":
+                stringToCheck = weaponSpec.getTrackingStr();
+                break;
+            case "turnRateStr":
+                stringToCheck = weaponSpec.getTurnRateStr();
+                break;
+            case "accuracyStr":
+                stringToCheck = weaponSpec.getAccuracyStr();
+                break;
+            /* don't think anyone wants to use these
+            case "customPrimary":
+                stringToCheck = weaponSpec.getCustomPrimary();
+                break;
+            case "customAncillary":
+                stringToCheck = weaponSpec.getCustomAncillary();
+                break;
+            case "autofitCategory":
+                stringToCheck = weaponSpec.getAutofitCategory();
+                break;
+             */
+            // ARRAYS
+            case "hints":
+                arrayToCheck = Arrays.asList(weaponSpec.getAIHints().toString().replaceAll("[\\[\\]]", "").split(", "));
+                break;
+            case "tags":
+                arrayToCheck = new ArrayList<>(weaponSpec.getTags());
+                break;
+            case "autofitCategoriesInPriorityOrder":
+                arrayToCheck = new ArrayList<>(weaponSpec.getAutofitCategoriesInPriorityOrder());
+                break;
+            // FLOATS
+            case "tier":
+                floatToCheck = weaponSpec.getTier();
+                break;
+            case "rarity":
+                floatToCheck = weaponSpec.getRarity();
+                break;
+            case "base value":
+                floatToCheck = weaponSpec.getBaseValue();
+                break;
+            case "range":
+                floatToCheck = weaponSpec.getMaxRange();
+                break;
+            case "damage/second":
+                floatToCheck = weaponSpec.getDerivedStats().getDps();
+                break;
+            case "damage/shot":
+                floatToCheck = weaponSpec.getDerivedStats().getDamagePerShot();
+                break;
+            case "emp/second":
+                floatToCheck = weaponSpec.getDerivedStats().getEmpPerSecond();
+                break;
+            case "emp/shot":
+                floatToCheck = weaponSpec.getDerivedStats().getEmpPerShot();
+                break;
+            //case "impact": // can't grab for beams
+            //case "turn rate": // not in spec API
+            case "OPs":
+                floatToCheck = weaponSpec.getOrdnancePointCost(null);
+                break;
+            case "ammo":
+                floatToCheck = weaponSpec.getMaxAmmo();
+                break;
+            case "ammo/sec":
+                floatToCheck = weaponSpec.getAmmoPerSecond();
+                break;
+            //case "reload size": // can't be easily obtained from spec
+            case "energy/shot":
+                floatToCheck = weaponSpec.getDerivedStats().getFluxPerDam() * weaponSpec.getDerivedStats().getDamagePerShot();
+                break;
+            case "energy/second":
+                floatToCheck = weaponSpec.getDerivedStats().getFluxPerSecond();
+                break;
+            case "chargeup":
+                if (weaponSpec.isBeam()) {
+                    floatToCheck = weaponSpec.getBeamChargeupTime();
+                } else {
+                    floatToCheck = weaponSpec.getChargeTime();
+                }
+                break;
+            //case "chargedown": // can't grab for non-beams
+            //case "burst size": // gives wrong results for beams
+            //case "burst delay": // gives wrong results for beams
+            case "burst duration":
+                floatToCheck = weaponSpec.getDerivedStats().getBurstFireDuration();
+                break;
+            case "min spread":
+                floatToCheck = weaponSpec.getMinSpread();
+                break;
+            case "max spread":
+                floatToCheck = weaponSpec.getMaxSpread();
+                break;
+            case "spread/shot":
+                floatToCheck = weaponSpec.getSpreadBuildup();
+                break;
+            case "spread decay/sec":
+                floatToCheck = weaponSpec.getSpreadDecayRate();
+                break;
+            //case "beam speed": // obfuscated or something
+            case "proj speed":
+                if (weaponSpec.getProjectileSpec() instanceof ProjectileSpecAPI) {
+                    floatToCheck = ((ProjectileSpecAPI) weaponSpec.getProjectileSpec()).getMoveSpeed(null, null);
+                }
+                break;
+            /* kind of useless without projectile speed
+            case "launch speed":
+                if (weaponSpec.getProjectileSpec() instanceof MissileSpecAPI) {
+                    floatToCheck = ((MissileSpecAPI) weaponSpec.getProjectileSpec()).getLaunchSpeed();
+                }
+                break;
+            case "flight time":
+                if (weaponSpec.getProjectileSpec() instanceof MissileSpecAPI) {
+                    floatToCheck = ((MissileSpecAPI) weaponSpec.getProjectileSpec()).getMaxFlightTime();
+                }
+                break;
+             */
+            case "proj hitpoints":
+                if (weaponSpec.getProjectileSpec() instanceof MissileSpecAPI) {
+                    floatToCheck = ((MissileSpecAPI) weaponSpec.getProjectileSpec()).getHullSpec().getHitpoints();
+                }
+                break;
+            /* just why
+            case "autofireAccBonus":
+                floatToCheck = weaponSpec.getAutofireAccBonus();
+                break;
+            case "extraArcForAI":
+                floatToCheck = weaponSpec.getExtraArcForAI();
+                break;
+             */
+            default:
+                log.error("Unexpected default parameter");
+        }
+        switch (operator) {
+            case "startsWith":
+                valid = stringToCheck.startsWith(value);
+                break;
+            case "!startsWith":
+                valid = !stringToCheck.startsWith(value);
+                break;
+            case "endsWith":
+                valid = stringToCheck.endsWith(value);
+                break;
+            case "!endsWith":
+                valid = !stringToCheck.endsWith(value);
+                break;
+            case "contains":
+                if (!stringToCheck.isEmpty()) {
+                    valid = stringToCheck.contains(value);
+                }
+                if (!arrayToCheck.isEmpty()) {
+                    valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                }
+                break;
+            case "!contains":
+                if (!stringToCheck.isEmpty()) {
+                    valid = !stringToCheck.contains(value);
+                }
+                if (!arrayToCheck.isEmpty()) {
+                    valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                }
+                break;
+            case "in":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
+            case "!in":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
+            case "equals":
+                valid = stringToCheck.equalsIgnoreCase(value);
+                break;
+            case "!equals":
+                valid = !stringToCheck.equalsIgnoreCase(value);
+                break;
+            case "matches":
+                valid = stringToCheck.matches(value);
+                break;
+            case "!matches":
+                valid = !stringToCheck.matches(value);
+                break;
+            case "<":
+                valid = floatToCheck < Float.parseFloat(value);
+                break;
+            case ">":
+                valid = floatToCheck > Float.parseFloat(value);
+                break;
+            case "=":
+                valid = floatToCheck == Float.parseFloat(value);
+                break;
+            case "<=":
+                valid = floatToCheck <= Float.parseFloat(value);
+                break;
+            case ">=":
+                valid = floatToCheck >= Float.parseFloat(value);
+                break;
+            case "!=":
+                valid = floatToCheck != Float.parseFloat(value);
+                break;
+            case "()":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck > lower && floatToCheck < upper;
+                break;
+            case "[]":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck >= lower && floatToCheck <= upper;
+                break;
+            case "[)":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck >= lower && floatToCheck < upper;
+                break;
+            case "(]":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck > lower && floatToCheck <= upper;
+                break;
+            case "containsAll":
+                valid = arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "!containsAll":
+                valid = !arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "containsAny":
+                valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "!containsAny":
+                valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "allIn":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            case "!allIn":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            default:
+                log.error("Unexpected default operator " + operator);
+        }
+        return valid;
+    }
+
+    public static boolean validateWingStat(String wingId, String stat, String operator, String value) {
+        FighterWingSpecAPI wingSpec = Global.getSettings().getFighterWingSpec(wingId);
+        float base;
+        String stringToCheck = "";
+        float floatToCheck = Float.NaN, lower, upper;
+        List<String> arrayToCheck = new ArrayList<>();
+        CampaignFleetAPI fleet = Global.getFactory().createEmptyFleet(Factions.PLAYER, "fleet", true); // aiMode=true means no crew required
+        FleetMemberAPI member = fleet.getFleetData().addFleetMember(wingId + HULL_SUFFIX);
+        member.updateStats(); // fixes it being set to 0 CR and having -10% on a bunch of stats
+        MutableShipStatsAPI stats = member.getStats();
+        boolean valid = false;
+        switch (stat) { // todo: can technically grab anything accessible through hullSpec?
+            // STRINGS
+            case "id":
+                stringToCheck = wingId;
+                break;
+            case "name":
+                stringToCheck = wingSpec.getWingName();
+                break;
+            case "tech/manufacturer":
+                stringToCheck = wingSpec.getVariant().getHullSpec().getManufacturer();
+                break;
+            case "formation":
+                stringToCheck = wingSpec.getFormation().toString();
+                break;
+            case "role":
+                stringToCheck = wingSpec.getRole().toString();
+                break;
+            case "role desc":
+                stringToCheck = wingSpec.getRoleDesc();
+                break;
+            case "defense type":
+                stringToCheck = wingSpec.getVariant().getHullSpec().getDefenseType().name();
+                break;
+            // ARRAYS
+            case "tags":
+                arrayToCheck = new ArrayList<>(wingSpec.getTags());
+                break;
+            case "hints":
+                arrayToCheck = Arrays.asList(wingSpec.getVariant().getHullSpec().getHints().toString().replaceAll("[\\[\\]]", "").split(", "));
+                break;
+            case "hullmods":
+                arrayToCheck = new ArrayList<>(wingSpec.getVariant().getHullMods());
+                break;
+            case "autofitCategoriesInPriorityOrder":
+                arrayToCheck = new ArrayList<>(wingSpec.getAutofitCategoriesInPriorityOrder());
+                break;
+            // FLOATS
+            case "tier":
+                floatToCheck = wingSpec.getTier();
+                break;
+            case "rarity":
+                floatToCheck = wingSpec.getRarity();
+                break;
+            case "fleet pts":
+                floatToCheck = wingSpec.getFleetPoints();
+                break;
+            case "op cost":
+                floatToCheck = wingSpec.getOpCost(null);
+                break;
+            //case "range": // not in spec API
+            //case "attackRunRange": // gets confusing without engagement range
+            //case "attackPositionOffset": // pointless without attack run range
+            case "num":
+                floatToCheck = wingSpec.getNumFighters();
+                break;
+            case "refit":
+                floatToCheck = wingSpec.getRefitTime();
+                break;
+            case "base value":
+                floatToCheck = wingSpec.getBaseValue();
+                break;
+            case "hitpoints":
+                base = wingSpec.getVariant().getHullSpec().getHitpoints();
+                floatToCheck = stats.getHullBonus().computeEffective(base);
+                break;
+            case "armor rating":
+                base = wingSpec.getVariant().getHullSpec().getArmorRating();
+                floatToCheck = stats.getArmorBonus().computeEffective(base);
+                break;
+            case "max flux":
+                floatToCheck = stats.getFluxCapacity().getModifiedValue();
+                //floatToCheck = shipHullSpec.getFluxCapacity();
+                break;
+            case "flux dissipation":
+                floatToCheck = stats.getFluxDissipation().getModifiedValue();
+                //floatToCheck = shipHullSpec.getFluxDissipation();
+                break;
+            case "max speed":
+                floatToCheck = stats.getMaxSpeed().getModifiedValue();
+                break;
+            case "acceleration":
+                floatToCheck = stats.getAcceleration().getModifiedValue();
+                break;
+            case "deceleration":
+                floatToCheck = stats.getDeceleration().getModifiedValue();
+                break;
+            case "max turn rate":
+                floatToCheck = stats.getMaxTurnRate().getModifiedValue();
+                break;
+            case "turn acceleration":
+                floatToCheck = stats.getTurnAcceleration().getModifiedValue();
+                break;
+            case "shield arc":
+                base = wingSpec.getVariant().getHullSpec().getShieldSpec().getArc();
+                floatToCheck = stats.getShieldArcBonus().computeEffective(base);
+                break;
+            case "shield upkeep":
+                base = wingSpec.getVariant().getHullSpec().getShieldSpec().getUpkeepCost() / Math.max(0.0001f, stats.getFluxDissipation().getModifiedValue());
+                floatToCheck = base * stats.getShieldUpkeepMult().getModifiedValue();
+                break;
+            case "shield efficiency":
+                base = wingSpec.getVariant().getHullSpec().getShieldSpec().getFluxPerDamageAbsorbed();
+                floatToCheck = base * stats.getShieldDamageTakenMult().getModifiedValue();
+                break;
+            case "phase cost":
+                base = wingSpec.getVariant().getHullSpec().getShieldSpec().getPhaseCost();
+                floatToCheck = stats.getPhaseCloakActivationCostBonus().computeEffective(base);
+                break;
+            case "phase upkeep":
+                base = wingSpec.getVariant().getHullSpec().getShieldSpec().getPhaseUpkeep();
+                floatToCheck = stats.getPhaseCloakUpkeepCostBonus().computeEffective(base);
+                break;
+            case "crew":
+                base = wingSpec.getVariant().getHullSpec().getMinCrew();
+                floatToCheck = stats.getMinCrewMod().computeEffective(base); // todo same as max crew in vanilla, should check with mods...
+                break;
+            default:
+                log.error("Unexpected default parameter");
+        }
+        switch (operator) {
+            case "startsWith":
+                valid = stringToCheck.startsWith(value);
+                break;
+            case "!startsWith":
+                valid = !stringToCheck.startsWith(value);
+                break;
+            case "endsWith":
+                valid = stringToCheck.endsWith(value);
+                break;
+            case "!endsWith":
+                valid = !stringToCheck.endsWith(value);
+                break;
+            case "contains":
+                if (!stringToCheck.isEmpty()) {
+                    valid = stringToCheck.contains(value);
+                }
+                if (!arrayToCheck.isEmpty()) {
+                    valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                }
+                break;
+            case "!contains":
+                if (!stringToCheck.isEmpty()) {
+                    valid = !stringToCheck.contains(value);
+                }
+                if (!arrayToCheck.isEmpty()) {
+                    valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                }
+                break;
+            case "in":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
+            case "!in":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
+            case "equals":
+                valid = stringToCheck.equalsIgnoreCase(value);
+                break;
+            case "!equals":
+                valid = !stringToCheck.equalsIgnoreCase(value);
+                break;
+            case "matches":
+                valid = stringToCheck.matches(value);
+                break;
+            case "!matches":
+                valid = !stringToCheck.matches(value);
+                break;
+            case "<":
+                valid = floatToCheck < Float.parseFloat(value);
+                break;
+            case ">":
+                valid = floatToCheck > Float.parseFloat(value);
+                break;
+            case "=":
+                valid = floatToCheck == Float.parseFloat(value);
+                break;
+            case "<=":
+                valid = floatToCheck <= Float.parseFloat(value);
+                break;
+            case ">=":
+                valid = floatToCheck >= Float.parseFloat(value);
+                break;
+            case "!=":
+                valid = floatToCheck != Float.parseFloat(value);
+                break;
+            case "()":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck > lower && floatToCheck < upper;
+                break;
+            case "[]":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck >= lower && floatToCheck <= upper;
+                break;
+            case "[)":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck >= lower && floatToCheck < upper;
+                break;
+            case "(]":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck > lower && floatToCheck <= upper;
+                break;
+            case "containsAll":
+                valid = arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "!containsAll":
+                valid = !arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "containsAny":
+                valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "!containsAny":
+                valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "allIn":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            case "!allIn":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            default:
+                log.error("Unexpected default operator " + operator);
+        }
+        return valid;
+    }
 }
 
         /* breaks because the game doesn't crash when you have an entry in weapon_data.csv but no .weapon file.
@@ -333,7 +913,7 @@ public class SCVE_FilterUtils {
                 vanillaWings.add(vanillaWingId);
             }
         } catch (IOException | JSONException e) {
-            log.error("Could not load vanilla data");
+            log.error("Could not load vanilla data", e);
         }
         switch (filterLevel) {
             case 0: // only weapons/wings from that mod
@@ -373,7 +953,7 @@ public class SCVE_FilterUtils {
                         wingSpec.setOpCost(100000);
                     }
                 } catch (IOException | JSONException e) {
-                    log.error("Could not load " + WEAPON_DATA_CSV + " or " + WING_DATA_CSV);
+                    log.error("Could not load " + WEAPON_DATA_CSV + " or " + WING_DATA_CSV, e);
                 }
                 break;
             case 1: // only weapons/wings from that mod and vanilla
@@ -409,7 +989,7 @@ public class SCVE_FilterUtils {
                         wingSpec.setOpCost(100000);
                     }
                 } catch (IOException | JSONException e) {
-                    log.error("Could not load " + WEAPON_DATA_CSV + " or " + WING_DATA_CSV);
+                    log.error("Could not load " + WEAPON_DATA_CSV + " or " + WING_DATA_CSV, e);
                 }
                 break;
             case 3: // show all weapons, including restricted ones

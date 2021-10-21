@@ -4,9 +4,12 @@ import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.combat.MutableShipStatsAPI;
 import com.fs.starfarer.api.combat.ShipHullSpecAPI;
+import com.fs.starfarer.api.combat.WeaponAPI.WeaponSize;
+import com.fs.starfarer.api.combat.WeaponAPI.WeaponType;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.fleet.FleetMemberType;
 import com.fs.starfarer.api.impl.campaign.ids.Factions;
+import com.fs.starfarer.api.loading.WeaponSlotAPI;
 import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin;
@@ -31,7 +34,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
     // pair.one = system id
     // pair.two = mass
     public static HashMap<String, Pair<String, Float>> hullIdToSpecialStatsMap = new HashMap<>();
-    public static String CUSTOM_DATA_PATH = "custom_mission.csv";
+    public static String CUSTOM_MISSION_PATH = "custom_mission.csv";
 
     @Override
     public void defineMission(MissionDefinitionAPI api) {
@@ -50,7 +53,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         Set<FleetMemberAPI> validShipsSet = new TreeSet<>(memberComparator);
         try {
             JSONArray shipCSV = Global.getSettings().getMergedSpreadsheetDataForMod("id", SHIP_DATA_CSV, "starsector-core");
-            JSONArray customCSV = Global.getSettings().loadCSV(CUSTOM_DATA_PATH);
+            JSONArray customCSV = Global.getSettings().loadCSV(CUSTOM_MISSION_PATH);
             // base hulls
             for (int i = 0; i < shipCSV.length(); i++) {
                 JSONObject shipRow = shipCSV.getJSONObject(i);
@@ -85,7 +88,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 }
 
             }
-            // skins
+            // skins - needs to be done separately to get system/mass if possible
             for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
                 if (shipHullSpec.isBaseHull() || !(validateHullSpec(shipHullSpec, blacklistedShips))) { // skip base hulls and modules/stations
                     continue;
@@ -126,7 +129,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 }
             }
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + SHIP_DATA_CSV + " or " + CUSTOM_DATA_PATH);
+            log.error("Could not load " + SHIP_DATA_CSV + " or " + CUSTOM_MISSION_PATH, e);
         }
 
         boolean flagship = true;
@@ -138,12 +141,16 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 flagship = false;
             }
         }
+        if (flagship) {
+            api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
+                    getString("customNoShips"), true);
+        }
     }
 
     public ArrayList<String> createFilterListBriefing(MissionDefinitionAPI api) {
         ArrayList<String> filterList = new ArrayList<>();
         try {
-            JSONArray customCSV = Global.getSettings().loadCSV(CUSTOM_DATA_PATH);
+            JSONArray customCSV = Global.getSettings().loadCSV(CUSTOM_MISSION_PATH);
             for (int j = 0; j < customCSV.length(); j++) {
                 JSONObject customRow = customCSV.getJSONObject(j);
                 String parameter = customRow.getString("parameter");
@@ -155,7 +162,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 filterList.add(parameter);
             }
         } catch (IOException | JSONException e) {
-            log.error("Could not load " + CUSTOM_DATA_PATH);
+            log.error("Could not load " + CUSTOM_MISSION_PATH, e);
         }
         api.addBriefingItem("");
         api.addBriefingItem("");
@@ -176,6 +183,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         //Global.getFactory().createFleetMember(FleetMemberType.SHIP,hullId+HULL_SUFFIX); // can't use this because they have 0 CR and mess up the stats
         MutableShipStatsAPI stats = member.getStats();
         boolean valid = false;
+        boolean checkWeapons = false;
         switch (stat) { // todo: can do basically anything in MutableShipStatsAPI
             // STRINGS
             case "id":
@@ -201,6 +209,19 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 break;
             case "hullSize":
                 stringToCheck = shipHullSpec.getHullSize().toString();
+                break;
+            // ARRAYS
+            case "hints":
+                arrayToCheck = Arrays.asList(shipHullSpec.getHints().toString().replaceAll("[\\[\\]]", "").split(", "));
+                break;
+            case "tags":
+                arrayToCheck = new ArrayList<>(shipHullSpec.getTags());
+                break;
+            case "builtInMods":
+                arrayToCheck = shipHullSpec.getBuiltInMods();
+                break;
+            case "builtInWings":
+                arrayToCheck = shipHullSpec.getBuiltInWings();
                 break;
             // FLOATS
             case "DP":
@@ -232,6 +253,9 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 floatToCheck = stats.getNumFighterBays().getModifiedValue();
                 //floatToCheck = shipHullSpec.getFighterBays();
                 break;
+            case "numBuiltInWings":
+                floatToCheck = shipHullSpec.getBuiltInWings().size();
+                break;
             case "max speed":
                 floatToCheck = stats.getMaxSpeed().getModifiedValue();
                 break;
@@ -255,7 +279,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 floatToCheck = stats.getShieldArcBonus().computeEffective(base);
                 break;
             case "shield upkeep":
-                base = shipHullSpec.getShieldSpec().getUpkeepCost() / shipHullSpec.getFluxDissipation();
+                base = shipHullSpec.getShieldSpec().getUpkeepCost() / Math.max(0.0001f,stats.getFluxDissipation().getModifiedValue());
                 floatToCheck = base * stats.getShieldUpkeepMult().getModifiedValue();
                 break;
             case "shield efficiency":
@@ -341,28 +365,138 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             case "numModules":
                 floatToCheck = member.getVariant().getStationModules().size();
                 break;
-            // ARRAYS
-            case "hints":
-                arrayToCheck = Arrays.asList(shipHullSpec.getHints().toString().replaceAll("[\\[\\]]", "").split(", "));
-                break;
-            case "tags":
-                arrayToCheck = new ArrayList<>(shipHullSpec.getTags());
-                break;
-            case "builtInMods":
-                arrayToCheck = shipHullSpec.getBuiltInMods();
-                break;
-            case "builtInWings":
-                arrayToCheck = shipHullSpec.getBuiltInWings();
+            case "numSmallSlots":
+            case "numMediumSlots":
+            case "numLargeSlots":
+            case "numBallisticSlots":
+            case "numEnergySlots":
+            case "numMissileSlots":
+            case "numSBSlots":
+            case "numSESlots":
+            case "numSMSlots":
+            case "numMBSlots":
+            case "numMESlots":
+            case "numMMSlots":
+            case "numLBSlots":
+            case "numLESlots":
+            case "numLMSlots":
+                checkWeapons = true;
                 break;
             default:
                 log.error("Unexpected default parameter");
+        }
+        if (checkWeapons) {
+            List<WeaponSlotAPI> weaponSlots = shipHullSpec.getAllWeaponSlotsCopy();
+            int
+                    numSB = 0, numSE = 0, numSM = 0,
+                    numMB = 0, numME = 0, numMM = 0,
+                    numLB = 0, numLE = 0, numLM = 0;
+            List<WeaponType> ballistics = Arrays.asList(WeaponType.BALLISTIC, WeaponType.HYBRID, WeaponType.COMPOSITE, WeaponType.UNIVERSAL);
+            List<WeaponType> energies = Arrays.asList(WeaponType.ENERGY, WeaponType.HYBRID, WeaponType.SYNERGY, WeaponType.UNIVERSAL);
+            List<WeaponType> missiles = Arrays.asList(WeaponType.MISSILE, WeaponType.COMPOSITE, WeaponType.SYNERGY, WeaponType.UNIVERSAL);
+            for (WeaponSlotAPI weaponSlot : weaponSlots) {
+                //Pair<WeaponSize, WeaponType> weaponSizeTypePair = new Pair<>(weaponSlot.getSlotSize(), weaponSlot.getWeaponType());
+                if (weaponSlot.getSlotSize() == WeaponSize.SMALL) {
+                    if (ballistics.contains(weaponSlot.getWeaponType())) {
+                        numSB++;
+                    }
+                    if (energies.contains(weaponSlot.getWeaponType())) {
+                        numSE++;
+                    }
+                    if (missiles.contains(weaponSlot.getWeaponType())) {
+                        numSM++;
+                    }
+                } else if (weaponSlot.getSlotSize() == WeaponSize.MEDIUM) {
+                    if (ballistics.contains(weaponSlot.getWeaponType())) {
+                        numMB++;
+                    }
+                    if (energies.contains(weaponSlot.getWeaponType())) {
+                        numME++;
+                    }
+                    if (missiles.contains(weaponSlot.getWeaponType())) {
+                        numMM++;
+                    }
+                } else if (weaponSlot.getSlotSize() == WeaponSize.LARGE) {
+                    if (ballistics.contains(weaponSlot.getWeaponType())) {
+                        numLB++;
+                    }
+                    if (energies.contains(weaponSlot.getWeaponType())) {
+                        numLE++;
+                    }
+                    if (missiles.contains(weaponSlot.getWeaponType())) {
+                        numLM++;
+                    }
+                }
+            }
+            int
+                    numS = numSB + numSE + numSM,
+                    numMed = numMB + numME + numMM,
+                    numL = numLB + numLE + numLM,
+                    numB = numSB + numMB + numLB,
+                    numE = numSE + numME + numLE,
+                    numMissile = numSM + numMM + numLM;
+            switch (stat) {
+                case "numSmallSlots":
+                    floatToCheck = numS;
+                    break;
+                case "numMediumSlots":
+                    floatToCheck = numMed;
+                    break;
+                case "numLargeSlots":
+                    floatToCheck = numL;
+                    break;
+                case "numBallisticSlots":
+                    floatToCheck = numB;
+                    break;
+                case "numEnergySlots":
+                    floatToCheck = numE;
+                    break;
+                case "numMissileSlots":
+                    floatToCheck = numMissile;
+                    break;
+                case "numSBSlots":
+                    floatToCheck = numSB;
+                    break;
+                case "numSESlots":
+                    floatToCheck = numSE;
+                    break;
+                case "numSMSlots":
+                    floatToCheck = numSM;
+                    break;
+                case "numMBSlots":
+                    floatToCheck = numMB;
+                    break;
+                case "numMESlots":
+                    floatToCheck = numME;
+                    break;
+                case "numMMSlots":
+                    floatToCheck = numMM;
+                    break;
+                case "numLBSlots":
+                    floatToCheck = numLB;
+                    break;
+                case "numLESlots":
+                    floatToCheck = numLE;
+                    break;
+                case "numLMSlots":
+                    floatToCheck = numLM;
+                    break;
+                default:
+                    break;
+            }
         }
         switch (operator) {
             case "startsWith":
                 valid = stringToCheck.startsWith(value);
                 break;
+            case "!startsWith":
+                valid = !stringToCheck.startsWith(value);
+                break;
             case "endsWith":
                 valid = stringToCheck.endsWith(value);
+                break;
+            case "!endsWith":
+                valid = !stringToCheck.endsWith(value);
                 break;
             case "contains":
                 if (!stringToCheck.isEmpty()) {
@@ -372,11 +506,31 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
                 }
                 break;
+            case "!contains":
+                if (!stringToCheck.isEmpty()) {
+                    valid = !stringToCheck.contains(value);
+                }
+                if (!arrayToCheck.isEmpty()) {
+                    valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                }
+                break;
+            case "in":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
+            case "!in":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
             case "equals":
                 valid = stringToCheck.equalsIgnoreCase(value);
                 break;
+            case "!equals":
+                valid = !stringToCheck.equalsIgnoreCase(value);
+                break;
             case "matches":
                 valid = stringToCheck.matches(value);
+                break;
+            case "!matches":
+                valid = !stringToCheck.matches(value);
                 break;
             case "<":
                 valid = floatToCheck < Float.parseFloat(value);
@@ -419,11 +573,23 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             case "containsAll":
                 valid = arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
                 break;
+            case "!containsAll":
+                valid = !arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
+                break;
             case "containsAny":
                 valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
                 break;
+            case "!containsAny":
+                valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "allIn":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            case "!allIn":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
             default:
-                log.error("Unexpected default operator");
+                log.error("Unexpected default operator " + operator);
         }
         return valid;
     }

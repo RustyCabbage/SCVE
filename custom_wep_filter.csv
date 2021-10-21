@@ -1,0 +1,49 @@
+parameter,operator,value,notes
+"# change ""operator"" and ""value"" according to String/Array/Float",,,
+"# String Operators: startsWith/endsWith/contains/in/equals/matches. Prefix with ""!"" to negate. cAsE SeNSiTiVe (except ""equals""). ""matches"" is in regex format.",,,
+"# Array Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. ",,,
+"# Float Operators: </>/=/<=/>=/!=/()/[]/[)/(]. Uses modified values when possible. Interval values should be of the form ""a,b""",,,
+"# Values: String (cAsE SeNSiTiVe) / Array (comma separated (""a,b,c,..."")) / Float",,,
+,,,
+showRestricted,,FALSE,"# If true, will also include restricted weapons if applicable"
+,,,
+### Strings ###,,,"# Operators: startsWith/endsWith/contains/in/equals/matches. Prefix with ""!"" to negate. cAsE SeNSiTiVe (except ""equals""). ""matches"" is in regex format."
+id,,,
+name,,,
+tech/manufacturer,,,"FYI no manufacturer entry returns ""Common"""
+size,,,
+mount type,,,"Can be ""BALLISTIC"", ""ENERGY"", ""MISSILE"", ""HYBRID"", ""SYNERGY"", ""COMPOSITE"", ""UNIVERSAL"""
+damage type,,,"Can be ""KINETIC"", ""HIGH_EXPLOSIVE"", ""FRAGMENTATION"", ""ENERGY"", ""OTHER"""
+primaryRoleStr,,,
+speedStr,,,
+trackingStr,,,
+turnRateStr,,,
+accuracyStr,,,
+,,,
+### Arrays ###,,,"# Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. "
+hints,,,
+tags,,,
+autofitCategoriesInPriorityOrder,,,
+,,,
+### Floats ###,,,"# Operators: </>/=/<=/>=/!=/()/[]/[)/(]. Uses modified values when possible. Interval values should be of the form ""a,b"""
+tier,,,
+rarity,,,
+base value,,,
+range,,,
+damage/second,,,
+damage/shot,,,
+emp/second,,,"for beams, or emp/refireDelay for non-beams"
+emp/shot,,,
+OPs,,,
+ammo,,,
+ammo/sec,,,
+energy/shot,,,
+energy/second,,,
+chargeup,,,
+burst duration,,,
+min spread,,,
+max spread,,,
+spread/shot,,,
+spread decay/sec,,,
+proj speed,,,can't grab for missiles but seems important enough to keep regardless
+proj hitpoints,,,
