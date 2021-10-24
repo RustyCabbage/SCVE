@@ -4,7 +4,7 @@ Provides four out of campaign missions:
 - a sorted list of all the ships in vanilla
 - a sorted list of all the ships added by mods filtered on a per-mod basis
 - custom searches through editing a CSV file.
-- variant validator for modders
+- variant validator for modders which can catch things like using too much/too little OP, going over default caps/vents, invalid weapons, fighter shield efficiency, etc.
 
 No more relying on modders creating a showcase mission for you!
 
