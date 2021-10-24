@@ -357,7 +357,7 @@ public class SCVE_FilterUtils {
                         continue;
                     }
                     if (!validateWingStat(wingSpec.getId(), parameter, operator, value)) {
-                        wingSpec.addTag(Tags.RESTRICTED);
+                        wingSpec.setOpCost(10000);
                         break;
                     }
                 }

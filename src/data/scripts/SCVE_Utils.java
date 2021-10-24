@@ -90,6 +90,21 @@ public class SCVE_Utils {
                 || shipHullSpec.getHullId().startsWith("TAR_")); // literally can't find anything to block Practice Target hulls from the custom mission
     }
 
+    public static boolean validateHullSpecExcludingFighters(ShipHullSpecAPI shipHullSpec, Set<String> blacklist) {
+        if (shipHullSpec.isDefaultDHull()) {
+            return false;
+        } else return !(shipHullSpec.getHints().contains(ShipHullSpecAPI.ShipTypeHints.STATION)
+                //|| shipHullSpec.getHullId().matches(STATION_OR_MODULE_REGEX)
+                //|| shipHullSpec.getSpriteName().matches(STATION_OR_MODULE_REGEX)
+                //|| shipHullSpec.getTags().toString().matches(STATION_OR_MODULE_REGEX)
+                //|| shipHullSpec.getBuiltInMods().contains(HullMods.VASTBULK)
+                || blacklist.contains(shipHullSpec.getHullId())
+                || Global.getSettings().getVariant(shipHullSpec.getHullId() + "_Hull").isStation()
+                || (shipHullSpec.getManufacturer().equals(getString("commonTech")) && (!shipHullSpec.hasHullName() || shipHullSpec.getDesignation().isEmpty()))
+                || shipHullSpec.getHullId().equals("shuttlepod") // frick it has the same format as SWP arcade ships
+                || shipHullSpec.getHullId().startsWith("TAR_")); // literally can't find anything to block Practice Target hulls from the custom mission
+    }
+
     public static ListMap<String> getModToHullListMap(Set<String> blacklist) {
         try {
             // create ListMap of sources (file paths) to base hulls, mods only

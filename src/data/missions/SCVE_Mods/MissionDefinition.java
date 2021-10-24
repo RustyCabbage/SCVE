@@ -41,12 +41,17 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             shipList.removeAll(blacklistedShips);
 
             // don't use api.addFleetMember() because then the ships start at 0 CR
-            boolean flagship = true;
-            for (FleetMemberAPI member : getModFleetMembers(shipList)) {
-                String variantId = member.getVariant().getHullVariantId();
-                FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
-                if (flagship) {
-                    flagship = false;
+            if (shipList.isEmpty()) {
+                api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
+                        getString("modNoShips"), true);
+            } else {
+                boolean flagship = true;
+                for (FleetMemberAPI member : getModFleetMembers(shipList)) {
+                    String variantId = member.getVariant().getHullVariantId();
+                    FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
+                    if (flagship) {
+                        flagship = false;
+                    }
                 }
             }
         }
@@ -65,13 +70,13 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         } else if (Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
             currentSelection--;
             if (currentSelection < 0) {
-                currentSelection = Math.max(0,modToHull.size() - 1);
+                currentSelection = Math.max(0, modToHull.size() - 1);
             }
         }
         if (!modToHull.isEmpty()) {
-            ArrayList<Pair<String,String>> modIdNamePairList = new ArrayList<>();
+            ArrayList<Pair<String, String>> modIdNamePairList = new ArrayList<>();
             for (String modId : modToHull.keySet()) {
-                modIdNamePairList.add(new Pair<>(modId,Global.getSettings().getModManager().getModSpec(modId).getName()));
+                modIdNamePairList.add(new Pair<>(modId, Global.getSettings().getModManager().getModSpec(modId).getName()));
             }
             Collections.sort(modIdNamePairList, modComparator);
             currentMod = modIdNamePairList.get(currentSelection).one;
@@ -80,9 +85,9 @@ public class MissionDefinition implements MissionDefinitionPlugin {
     }
 
     public void createModListBriefing(MissionDefinitionAPI api) {
-        ArrayList<Pair<String,String>> modIdNamePairList = new ArrayList<>();
+        ArrayList<Pair<String, String>> modIdNamePairList = new ArrayList<>();
         for (String modId : modToHull.keySet()) {
-            modIdNamePairList.add(new Pair<>(modId,Global.getSettings().getModManager().getModSpec(modId).getName()));
+            modIdNamePairList.add(new Pair<>(modId, Global.getSettings().getModManager().getModSpec(modId).getName()));
         }
         Collections.sort(modIdNamePairList, modComparator);
         String currentMod = modIdNamePairList.get(currentSelection).one;

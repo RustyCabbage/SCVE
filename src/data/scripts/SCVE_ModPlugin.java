@@ -13,6 +13,7 @@ import static data.scripts.SCVE_Utils.*;
 public class SCVE_ModPlugin extends BaseModPlugin {
 
     private static final Logger log = Global.getLogger(SCVE_ModPlugin.class);
+
     public static Set<String> allModules = new HashSet<>();
     public static ListMap<String> modToHull = new ListMap<>();
     public static ListMap<String> modToWeapon = new ListMap<>();
