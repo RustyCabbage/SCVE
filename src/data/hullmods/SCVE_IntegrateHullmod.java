@@ -29,13 +29,9 @@ public class SCVE_IntegrateHullmod extends BaseHullMod {
         if (!hullmods.isEmpty()) {
             String last = hullmods.get(hullmods.size() - 1);
             ship.getVariant().removeMod(last);
-            if (Global.getSettings().getHullModSpec(last).hasTag(Tags.HULLMOD_DMOD)) {
-                ship.getVariant().addPermaMod(last, false);
-                //log.info("Built-in hullmod: " + last + " as d-mod");
-            } else {
-                ship.getVariant().addPermaMod(last, true);
-                //log.info("Built-in hullmod: " + last + " as s-mod");
-            }
+            //log.info("Built-in hullmod: " + last + " as d-mod");
+            //log.info("Built-in hullmod: " + last + " as s-mod");
+            ship.getVariant().addPermaMod(last, !Global.getSettings().getHullModSpec(last).hasTag(Tags.HULLMOD_DMOD));
         }
     }
 

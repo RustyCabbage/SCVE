@@ -57,10 +57,7 @@ public class SCVE_DisIntegrateHullmod extends BaseHullMod {
         if (Global.getSettings().getCurrentState() != GameState.TITLE) {
             return false;
         }
-        if (ship.getVariant().getPermaMods().isEmpty()) {
-            return false;
-        }
-        return true;
+        return !ship.getVariant().getPermaMods().isEmpty();
     }
 
     @Override

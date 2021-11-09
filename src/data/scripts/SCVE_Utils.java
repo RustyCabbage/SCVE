@@ -87,7 +87,10 @@ public class SCVE_Utils {
                 || Global.getSettings().getVariant(shipHullSpec.getHullId() + "_Hull").isStation()
                 || (shipHullSpec.getManufacturer().equals(getString("commonTech")) && (!shipHullSpec.hasHullName() || shipHullSpec.getDesignation().isEmpty()))
                 || shipHullSpec.getHullId().equals("shuttlepod") // frick it has the same format as SWP arcade ships
-                || shipHullSpec.getHullId().startsWith("TAR_")); // literally can't find anything to block Practice Target hulls from the custom mission
+                || shipHullSpec.getHullId().startsWith("TAR_") // literally can't find anything to block Practice Target hulls from the custom mission
+                || shipHullSpec.getHullId().startsWith("loa_arscapitol") // breaks stuff in simulator
+        );
+
     }
 
     public static boolean validateHullSpecExcludingFighters(ShipHullSpecAPI shipHullSpec, Set<String> blacklist) {

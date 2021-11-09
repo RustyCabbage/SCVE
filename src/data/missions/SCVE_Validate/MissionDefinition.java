@@ -33,7 +33,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
 
         HashMap<String, Integer> maxCapsAndVents = getMaxCapsAndVents();
         TreeMap<FleetMemberAPI, String> badFleetMemberMap = new TreeMap<>(memberComparator);
-        FleetMemberAPI member;
         for (String variantId : Global.getSettings().getAllVariantIds()) {
             String error = "";
             ShipVariantAPI variant = Global.getSettings().getVariant(variantId);
@@ -56,32 +55,37 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             }
             // check for over max OP
             if (variant.getUnusedOP(null) < 0 && !variant.isFighter()) {
-                error += getString("validateOverMaxOP") + Math.abs(variant.getUnusedOP(null)) + ", ";
+                error += Math.abs(variant.getUnusedOP(null)) + getString("validateOverMaxOP") + ", ";
             }
             /* todo too many false positives atm */
             // check for under max OP
             if (variant.getUnusedOP(null) > 0 && !variant.isFighter()) {
-                error += getString("validateUnderMaxOP") + Math.abs(variant.getUnusedOP(null)) + ", ";
+                error += Math.abs(variant.getUnusedOP(null)) + getString("validateUnderMaxOP") + ", ";
             }
             // check for over max flux capacitors/vents
             if (variant.getNumFluxCapacitors() > maxCapsAndVents.get(variant.getHullSize().toString())) {
-                error += getString("validateOverMaxCaps") + (variant.getNumFluxCapacitors() - maxCapsAndVents.get(variant.getHullSize().toString())) + ", ";
+                error += (variant.getNumFluxCapacitors() - maxCapsAndVents.get(variant.getHullSize().toString())) + getString("validateOverMaxCaps") + ", ";
             }
             if (variant.getNumFluxVents() > maxCapsAndVents.get(variant.getHullSize().toString())) {
-                error += getString("validateOverMaxVents") + (variant.getNumFluxVents() - maxCapsAndVents.get(variant.getHullSize().toString())) + ", ";
+                error += (variant.getNumFluxVents() - maxCapsAndVents.get(variant.getHullSize().toString())) + getString("validateOverMaxVents") + ", ";
             }
-            /* todo too many false positives atm
+            /* many issues, todo too many false positives atm. you live today chase
             // check for hiddenEverywhere hullmods
             ArrayList<String> hullModIds = new ArrayList<>();
             for (String hullModId : variant.getHullMods()) {
                 HullModSpecAPI hullModSpec = Global.getSettings().getHullModSpec(hullModId);
+                /*
                 if (hullModSpec.isHiddenEverywhere() && !variant.isFighter()) {
                     hullModIds.add(hullModId);
                 }
+                // don't have a ShipAPI to check, sadge
+                //if (!hullModSpec.getEffect().isApplicableToShip())
             }
             if (!hullModIds.isEmpty()) {
                 error += getString("validateHiddenEverywhere") + hullModIds + ", ";
             }
+            */
+            /* todo too many false positives atm
             // check for permaMods not in hullSpec, ignoring sMods
             ArrayList<String> permaModIds = new ArrayList<>();
             for (String permaModId : variant.getPermaMods()) {
@@ -99,7 +103,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             if (!variant.getSuppressedMods().isEmpty()) {
                 error += getString("validateSuppressedMods") + variant.getSuppressedMods() + ", ";
             }
-             */
+            */
             // check for weapons in wrong slot type/size
             if (!variant.isFighter()) {
                 ArrayList<String> invalidWeaponSlotIds = new ArrayList<>();
@@ -121,7 +125,11 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     error += getString("validateWeapons") + invalidWeaponSlotIds + ", ";
                 }
                 if (!hiddenSlotIds.isEmpty()) {
-                    error += getString("validateHiddenMounts") + hiddenSlotIds + ", ";
+                    if (hiddenSlotIds.size() < 5) { // sometimes hidden slots are intentional, but if so it probably won't be many
+                        error += getString("validateHiddenMounts") + hiddenSlotIds + ", ";
+                    } else {
+                        error += hiddenSlotIds.size() + " " + getString("validateHiddenMounts") + ", ";
+                    }
                 }
             } else {
                 // check for <1 efficiency shields on fighters
@@ -132,7 +140,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 }
             }
             if (!error.isEmpty()) {
-                member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, variant);
+                FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, variant);
                 badFleetMemberMap.put(member, error);
             }
         }

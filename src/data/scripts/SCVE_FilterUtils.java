@@ -40,6 +40,8 @@ public class SCVE_FilterUtils {
     public static String CUSTOM_WEAPONS_PATH = "custom_wep_filter.csv";
     public static String CUSTOM_WINGS_PATH = "custom_wing_filter.csv";
 
+    private static final String GachaSMods_MOD_ID = "GachaSMods";
+
     public static void getOriginalData() {
         for (WeaponSpecAPI weapon : Global.getSettings().getAllWeaponSpecs()) {
             Set<String> weaponTags = new HashSet<>(weapon.getTags()); // need to create a copy of the set, or it gets wiped later
@@ -50,10 +52,13 @@ public class SCVE_FilterUtils {
             ORIGINAL_WING_TAGS_MAP.put(wing.getId(), wingTags);
             ORIGINAL_WING_OP_COST_MAP.put(wing.getId(), wing.getOpCost(null));
         }
-        for (HullModSpecAPI hullMod : Global.getSettings().getAllHullModSpecs()) {
-            ORIGINAL_HULLMOD_QUALITIES_MAP.put(hullMod.getId(),
-                    new ArrayList<>(Arrays.asList(hullMod.hasTag(Tags.HULLMOD_DMOD), hullMod.isHidden(), hullMod.isHiddenEverywhere())));
-            ORIGINAL_HULLMOD_NAMES_MAP.put(hullMod.getId(), hullMod.getDisplayName());
+        for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+            if (hullModSpec.getId().startsWith(GachaSMods_MOD_ID)) {
+                continue;
+            }
+            ORIGINAL_HULLMOD_QUALITIES_MAP.put(hullModSpec.getId(),
+                    new ArrayList<>(Arrays.asList(hullModSpec.hasTag(Tags.HULLMOD_DMOD), hullModSpec.isHidden(), hullModSpec.isHiddenEverywhere())));
+            ORIGINAL_HULLMOD_NAMES_MAP.put(hullModSpec.getId(), hullModSpec.getDisplayName());
         }
     }
 
@@ -72,13 +77,16 @@ public class SCVE_FilterUtils {
             }
         }
         if (restoreHullmods) {
-            for (HullModSpecAPI hullMod : Global.getSettings().getAllHullModSpecs()) {
-                if (ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullMod.getId()).get(0)) {
-                    hullMod.addTag(Tags.HULLMOD_DMOD);
+            for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                if (hullModSpec.getId().startsWith(GachaSMods_MOD_ID)) {
+                    continue;
                 }
-                hullMod.setHidden(ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullMod.getId()).get(1));
-                hullMod.setHiddenEverywhere(ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullMod.getId()).get(2));
-                hullMod.setDisplayName(ORIGINAL_HULLMOD_NAMES_MAP.get(hullMod.getId()));
+                if (ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullModSpec.getId()).get(0)) {
+                    hullModSpec.addTag(Tags.HULLMOD_DMOD);
+                }
+                hullModSpec.setHidden(ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullModSpec.getId()).get(1));
+                hullModSpec.setHiddenEverywhere(ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullModSpec.getId()).get(2));
+                hullModSpec.setDisplayName(ORIGINAL_HULLMOD_NAMES_MAP.get(hullModSpec.getId()));
             }
         }
     }
@@ -286,6 +294,9 @@ public class SCVE_FilterUtils {
         switch (filterLevel) {
             case 1: // s-mods
                 for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                    if (hullModSpec.getId().startsWith(GachaSMods_MOD_ID)) {
+                        continue;
+                    }
                     if (hullModSpec.getId().startsWith(MOD_PREFIX)) {
                         hullModSpec.setHidden(false);
                         hullModSpec.setHiddenEverywhere(false);
@@ -295,6 +306,9 @@ public class SCVE_FilterUtils {
                 break;
             case 2: // d-mods
                 for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                    if (hullModSpec.getId().startsWith(GachaSMods_MOD_ID)) {
+                        continue;
+                    }
                     if (hullModSpec.hasTag(Tags.HULLMOD_DMOD)) {
                         hullModSpec.getTags().remove(Tags.HULLMOD_DMOD);
                         hullModSpec.setHidden(false);
@@ -305,6 +319,9 @@ public class SCVE_FilterUtils {
                 break;
             case 3: // all mods todo: see if I need to reset these UI tags
                 for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                    if (hullModSpec.getId().startsWith(GachaSMods_MOD_ID)) {
+                        continue;
+                    }
                     if (hullModSpec.isHidden()) {
                         hullModSpec.setHidden(false);
                         hullModSpec.addUITag("{Hidden}");
