@@ -108,6 +108,9 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             if (!variant.isFighter()) {
                 ArrayList<String> invalidWeaponSlotIds = new ArrayList<>();
                 ArrayList<String> hiddenSlotIds = new ArrayList<>();
+                ArrayList<String> badHardpointSlotIds = new ArrayList<>();
+                ArrayList<String> badTurretSlotIds = new ArrayList<>();
+                int ARC_FOR_TURRET = 20;
                 for (String slotId : variant.getFittedWeaponSlots()) {
                     WeaponSlotAPI slot = variant.getSlot(slotId);
                     WeaponSpecAPI weaponSpec = variant.getWeaponSpec(slotId);
@@ -119,6 +122,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     }
                     if (slot.isHidden()) {
                         hiddenSlotIds.add(slotId);
+                    } else if (slot.isHardpoint() && slot.getArc() > ARC_FOR_TURRET) {
+                        badHardpointSlotIds.add(slotId);
+                    } else if (slot.isTurret() && slot.getArc() <= ARC_FOR_TURRET) {
+                        badTurretSlotIds.add(slotId);
                     }
                 }
                 if (!invalidWeaponSlotIds.isEmpty()) {
@@ -130,6 +137,12 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     } else {
                         error += hiddenSlotIds.size() + " " + getString("validateHiddenMounts") + ", ";
                     }
+                }
+                if (!badHardpointSlotIds.isEmpty()) {
+                    error += getString("validateHardpoints") + badHardpointSlotIds + ", ";
+                }
+                if (!badTurretSlotIds.isEmpty()) {
+                    error += getString("validateTurrets") + badTurretSlotIds + ", ";
                 }
             } else {
                 // check for <1 efficiency shields on fighters
