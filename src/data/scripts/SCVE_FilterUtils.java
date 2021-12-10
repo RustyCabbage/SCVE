@@ -249,7 +249,8 @@ public class SCVE_FilterUtils {
                     if (modToWeapon.getList(modId).contains(weaponSpec.getWeaponId())) {
                         continue;
                     }
-                    weaponSpec.addTag(Tags.RESTRICTED);
+                    weaponSpec.setOrdnancePointCost(100000);
+                    //weaponSpec.addTag(Tags.RESTRICTED);
                 }
                 for (FighterWingSpecAPI wingSpec : Global.getSettings().getAllFighterWingSpecs()) {
                     if (modToWing.getList(modId).contains(wingSpec.getId())) {
@@ -264,7 +265,8 @@ public class SCVE_FilterUtils {
                             || modToWeapon.getList(VANILLA_CATEGORY).contains(weaponSpec.getWeaponId())) {
                         continue;
                     }
-                    weaponSpec.addTag(Tags.RESTRICTED);
+                    weaponSpec.setOrdnancePointCost(100000);
+                    //weaponSpec.addTag(Tags.RESTRICTED);
                 }
                 for (FighterWingSpecAPI wingSpec : Global.getSettings().getAllFighterWingSpecs()) {
                     if (modToWing.getList(modId).contains(wingSpec.getId())

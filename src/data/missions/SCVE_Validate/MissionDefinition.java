@@ -57,7 +57,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             if (variant.getUnusedOP(null) < 0 && !variant.isFighter()) {
                 error += Math.abs(variant.getUnusedOP(null)) + getString("validateOverMaxOP") + ", ";
             }
-            /* todo too many false positives atm */
             // check for under max OP
             if (variant.getUnusedOP(null) > 0 && !variant.isFighter()) {
                 error += Math.abs(variant.getUnusedOP(null)) + getString("validateUnderMaxOP") + ", ";
