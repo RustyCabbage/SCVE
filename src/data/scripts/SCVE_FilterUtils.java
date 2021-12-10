@@ -35,6 +35,7 @@ public class SCVE_FilterUtils {
     public static HashMap<String, Set<String>> ORIGINAL_WEAPON_TAGS_MAP = new HashMap<>();
     public static HashMap<String, Set<String>> ORIGINAL_WING_TAGS_MAP = new HashMap<>();
     public static HashMap<String, Float> ORIGINAL_WING_OP_COST_MAP = new HashMap<>();
+    public static HashMap<String, Float> ORIGINAL_WEAPON_OP_COST_MAP = new HashMap<>();
     public static HashMap<String, ArrayList<Boolean>> ORIGINAL_HULLMOD_QUALITIES_MAP = new HashMap<>();
     public static HashMap<String, String> ORIGINAL_HULLMOD_NAMES_MAP = new HashMap<>();
     public static String CUSTOM_WEAPONS_PATH = "custom_wep_filter.csv";
@@ -46,6 +47,7 @@ public class SCVE_FilterUtils {
         for (WeaponSpecAPI weapon : Global.getSettings().getAllWeaponSpecs()) {
             Set<String> weaponTags = new HashSet<>(weapon.getTags()); // need to create a copy of the set, or it gets wiped later
             ORIGINAL_WEAPON_TAGS_MAP.put(weapon.getWeaponId(), weaponTags);
+            ORIGINAL_WEAPON_OP_COST_MAP.put(weapon.getWeaponId(), weapon.getOrdnancePointCost(null));
         }
         for (FighterWingSpecAPI wing : Global.getSettings().getAllFighterWingSpecs()) {
             Set<String> wingTags = new HashSet<>(wing.getTags());
@@ -67,6 +69,7 @@ public class SCVE_FilterUtils {
             for (WeaponSpecAPI weapon : Global.getSettings().getAllWeaponSpecs()) {
                 weapon.getTags().clear();
                 weapon.getTags().addAll(ORIGINAL_WEAPON_TAGS_MAP.get(weapon.getWeaponId()));
+                weapon.setOrdnancePointCost(ORIGINAL_WEAPON_OP_COST_MAP.get(weapon.getWeaponId()));
             }
         }
         if (restoreWings) {
