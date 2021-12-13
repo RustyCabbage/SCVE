@@ -61,6 +61,10 @@ public class SCVE_Utils {
     }
 
     public static void initializeMission(MissionDefinitionAPI api, String playerTagline, String modId) {
+        initializeMission(api, playerTagline, modId, true);
+    }
+
+    public static void initializeMission(MissionDefinitionAPI api, String playerTagline, String modId, boolean switchFilter) {
         String fleetPrefix = getString("fleetPrefix");
         //String playerTagline = getString("vanillaTagline");
         String enemyTagLine = getString("enemyTagline");
@@ -71,7 +75,9 @@ public class SCVE_Utils {
         api.setFleetTagline(FleetSide.ENEMY, enemyTagLine);
         api.addToFleet(FleetSide.ENEMY, "atlas_Standard", FleetMemberType.SHIP, true);
         api.initMap(-mapSize / 2f, mapSize / 2f, -mapSize / 2f, mapSize / 2f);
-        SCVE_FilterUtils.switchFilter(api, modId);
+        if (switchFilter) {
+            SCVE_FilterUtils.setFilter(api, modId);
+        }
     }
 
     public static boolean validateHullSpec(ShipHullSpecAPI shipHullSpec, Set<String> blacklist) {

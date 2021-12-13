@@ -94,6 +94,10 @@ public class SCVE_FilterUtils {
         }
     }
 
+    public static Vector3f setFilter(MissionDefinitionAPI api, String modId) {
+        return setFilter(api, modId, true);
+    }
+
     /*
      SPACE - default everything
 
@@ -119,54 +123,61 @@ public class SCVE_FilterUtils {
      3 - show all hullmods
      */
     // todo separate weapons and wings?
-    public static Vector3f switchFilter(MissionDefinitionAPI api, String modId) {
+    public static Vector3f setFilter(MissionDefinitionAPI api, String modId, boolean applyFilter) {
         restoreOriginalData(true, true, true);
         if (globalFirstLoad || Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
-            shipFilter = 0;
-            weaponWingFilter = 2;
-            hullModFilter = 0;
+            shipFilter = DEFAULT_SHIP_FILTER;
+            weaponWingFilter = DEFAULT_WEAPON_WING_FILTER;
+            hullModFilter = DEFAULT_HULLMOD_FILTER;
             globalFirstLoad = false;
-        } else if (Keyboard.isKeyDown(Keyboard.KEY_Q)) {
-            shipFilter--;
-            if (shipFilter < 0) {
-                shipFilter = 2;
+        } else {
+            if (Keyboard.isKeyDown(Keyboard.KEY_Q)) {
+                shipFilter--;
+                if (shipFilter < 0) {
+                    shipFilter = 2;
+                }
+            } else if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
+                shipFilter++;
+                if (shipFilter > 2) {
+                    shipFilter = 0;
+                }
             }
-        } else if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
-            shipFilter++;
-            if (shipFilter > 2) {
-                shipFilter = 0;
+            if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
+                weaponWingFilter--;
+                if (weaponWingFilter < 0) {
+                    weaponWingFilter = 4;
+                }
+            } else if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
+                weaponWingFilter++;
+                if (weaponWingFilter > 4) {
+                    weaponWingFilter = 0;
+                }
+            }
+            if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
+                hullModFilter--;
+                if (hullModFilter < 0) {
+                    hullModFilter = 3;
+                }
+            } else if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
+                hullModFilter++;
+                if (hullModFilter > 3) {
+                    hullModFilter = 0;
+                }
             }
         }
-        if (Keyboard.isKeyDown(Keyboard.KEY_A)) {
-            weaponWingFilter--;
-            if (weaponWingFilter < 0) {
-                weaponWingFilter = 4;
-            }
-        } else if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
-            weaponWingFilter++;
-            if (weaponWingFilter > 4) {
-                weaponWingFilter = 0;
-            }
+        if (applyFilter) {
+            applyFilter(api, modId);
         }
-        if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
-            hullModFilter--;
-            if (hullModFilter < 0) {
-                hullModFilter = 3;
-            }
-        } else if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
-            hullModFilter++;
-            if (hullModFilter > 3) {
-                hullModFilter = 0;
-            }
-        }
+        return new Vector3f(shipFilter, weaponWingFilter, hullModFilter);
+    }
+
+    public static void applyFilter(MissionDefinitionAPI api, String modId) {
         blacklistedShips = getFilteredShips(shipFilter);
         blacklistedShips.addAll(allModules);
         filterWeaponsAndWings(weaponWingFilter, modId);
         addExtraHullMods(hullModFilter);
         createFilterBriefing(api);
-        return new Vector3f(shipFilter, weaponWingFilter, hullModFilter);
     }
-
 
     public static String createFilterBriefing(MissionDefinitionAPI api) {
         String

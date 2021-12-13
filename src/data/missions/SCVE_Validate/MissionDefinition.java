@@ -11,6 +11,7 @@ import com.fs.starfarer.api.loading.WeaponSpecAPI;
 import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin;
+import data.scripts.SCVE_FilterUtils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -29,7 +30,14 @@ public class MissionDefinition implements MissionDefinitionPlugin {
     @Override
     public void defineMission(MissionDefinitionAPI api) {
         // initialize
-        initializeMission(api, getString("validateTagline"), null);
+        initializeMission(api, getString("validateTagline"), null, false);
+        SCVE_FilterUtils.setFilter(api, null, false);
+        if (SCVE_FilterUtils.weaponWingFilter < 2) {
+            SCVE_FilterUtils.weaponWingFilter = 2;
+        } else if (SCVE_FilterUtils.weaponWingFilter > 3) {
+            SCVE_FilterUtils.weaponWingFilter = 3;
+        }
+        SCVE_FilterUtils.applyFilter(api, null);
 
         HashMap<String, Integer> maxCapsAndVents = getMaxCapsAndVents();
         TreeMap<FleetMemberAPI, String> badFleetMemberMap = new TreeMap<>(memberComparator);
@@ -156,15 +164,20 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 badFleetMemberMap.put(member, error);
             }
         }
-        log.info("-----------------");
-        log.info("INVALID VARIANTS:");
-        log.info("-----------------");
-        for (Map.Entry<FleetMemberAPI, String> badMember : badFleetMemberMap.entrySet()) {
-            String variantId = badMember.getKey().getVariant().getHullVariantId();
-            log.info(variantId + ": " + badMember.getValue());
-            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, badMember.getValue(), false);
+        if (badFleetMemberMap.entrySet().isEmpty()) {
+            api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
+                    getString("validateNoShips"), true);
+        } else {
+            log.info("-----------------");
+            log.info("INVALID VARIANTS:");
+            log.info("-----------------");
+            for (Map.Entry<FleetMemberAPI, String> badMember : badFleetMemberMap.entrySet()) {
+                String variantId = badMember.getKey().getVariant().getHullVariantId();
+                log.info(variantId + ": " + badMember.getValue());
+                FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, badMember.getValue(), false);
+            }
+            log.info("-----------------");
         }
-        log.info("-----------------");
     }
 
     public static HashMap<String, Integer> getMaxCapsAndVents() {

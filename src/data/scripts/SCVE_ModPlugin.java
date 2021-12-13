@@ -19,21 +19,39 @@ public class SCVE_ModPlugin extends BaseModPlugin {
     public static ListMap<String> modToWeapon = new ListMap<>();
     public static ListMap<String> modToWing = new ListMap<>();
 
+    public static final String
+            DEFAULT_SHIP_FILTER_SETTING = MOD_PREFIX + "_" + "defaultShipFilter",
+            DEFAULT_WEAPON_WING_FILTER_SETTING = MOD_PREFIX + "_" + "defaultWeaponWingFilter",
+            DEFAULT_HULLMOD_FILTER_SETTING = MOD_PREFIX + "_" + "defaultHullModFilter";
+    public static int
+            DEFAULT_SHIP_FILTER = 0,
+            DEFAULT_WEAPON_WING_FILTER = 2,
+            DEFAULT_HULLMOD_FILTER = 0;
+
     @Override
     public void onApplicationLoad() {
         allModules = getAllModules();
-        //log.info("Loaded allModules: " + allModules);
         modToHull = getModToHullListMap(allModules);
         modToWeapon = getModToWeaponListMap();
         modToWing = getModToWingListMap();
-        //log.info("Loaded modToHull: " + modToHull);
-        //log.info("Loaded modToWeapon: " + modToWeapon);
-        //log.info("Loaded modToWing: " + modToWing);
         SCVE_FilterUtils.getOriginalData();
-        //log.info(ORIGINAL_WEAPON_TAGS_MAP);
-        //log.info(ORIGINAL_WING_TAGS_MAP);
-        //log.info(ORIGINAL_WING_OP_COST_MAP);
-        //log.info(ORIGINAL_HULLMOD_IS_DMOD_MAP);
+
+        try {
+            DEFAULT_SHIP_FILTER = Global.getSettings().getInt(DEFAULT_SHIP_FILTER_SETTING);
+        } catch (Exception ex) {
+            DEFAULT_SHIP_FILTER = 0;
+        }
+        try {
+            DEFAULT_WEAPON_WING_FILTER = Global.getSettings().getInt(DEFAULT_WEAPON_WING_FILTER_SETTING);
+        } catch (Exception ex) {
+            DEFAULT_WEAPON_WING_FILTER = 2;
+        }
+        try {
+            DEFAULT_HULLMOD_FILTER = Global.getSettings().getInt(DEFAULT_HULLMOD_FILTER_SETTING);
+        } catch (Exception ex) {
+            DEFAULT_HULLMOD_FILTER = 0;
+        }
+
     }
 
     @Override
