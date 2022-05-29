@@ -8,18 +8,16 @@ import com.fs.starfarer.api.combat.BaseHullMod;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.ui.Alignment;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
-
-import java.awt.Color;
-import java.util.List;
-
 import org.apache.log4j.Logger;
+
+import java.awt.*;
+import java.util.List;
 
 import static data.scripts.SCVE_Utils.getString;
 
 public class SCVE_OfficerDetails extends BaseHullMod {
 
     public static Logger log = Global.getLogger(SCVE_OfficerDetails.class);
-    private static final float pad = 10f;
     public static boolean firstFrame = true;
 
     @Override
@@ -73,6 +71,7 @@ public class SCVE_OfficerDetails extends BaseHullMod {
     @Override
     public void addPostDescriptionSection(TooltipMakerAPI tooltip, ShipAPI.HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
         PersonAPI person = ship.getCaptain();
+        final float PAD = 10f;
 
         if (!person.isDefault()) {
             String title, imageText;
@@ -100,17 +99,17 @@ public class SCVE_OfficerDetails extends BaseHullMod {
                 title = "Officer details";
                 imageText = "The " + shipName + " is piloted by " + fullName + ", a Level " + level + " " + personality + " officer.";
             }
-            tooltip.addSectionHeading(title, Alignment.MID, -20);
+            tooltip.addSectionHeading(title, Alignment.MID, PAD);
 
             TooltipMakerAPI officerImageWithText = tooltip.beginImageWithText(portrait, portraitHeight);
             officerImageWithText.addPara(imageText,
                     -portraitHeight / 2, Color.YELLOW,
                     shipName, fullName, level, personality);
             //officerImageWithText.addPara(desc, 0);
-            tooltip.addImageWithText(pad);
+            tooltip.addImageWithText(PAD);
 
             if (isAdmiral) {
-                tooltip.addSectionHeading("Admiral skills", Alignment.MID, pad);
+                tooltip.addSectionHeading("Admiral skills", Alignment.MID, PAD);
 
                 for (SkillLevelAPI skill : skills) {
                     float skillLevel = skill.getLevel();
@@ -123,11 +122,11 @@ public class SCVE_OfficerDetails extends BaseHullMod {
 
                     TooltipMakerAPI skillImageWithText = tooltip.beginImageWithText(skillSprite, 40);
                     skillImageWithText.addPara(skillName, 0);
-                    tooltip.addImageWithText(pad);
+                    tooltip.addImageWithText(PAD);
                 }
             }
 
-            tooltip.addSectionHeading("Combat-related skills", Alignment.MID, pad);
+            tooltip.addSectionHeading("Combat-related skills", Alignment.MID, PAD);
 
             for (SkillLevelAPI skill : skills) {
                 float skillLevel = skill.getLevel();
@@ -147,7 +146,7 @@ public class SCVE_OfficerDetails extends BaseHullMod {
 
                 TooltipMakerAPI skillImageWithText = tooltip.beginImageWithText(skillSprite, 40);
                 skillImageWithText.addPara(skillName + eliteTextPre + eliteText + eliteTextPost, 0, Color.GREEN, eliteText);
-                tooltip.addImageWithText(pad);
+                tooltip.addImageWithText(PAD);
             }
         }
     }
@@ -160,5 +159,10 @@ public class SCVE_OfficerDetails extends BaseHullMod {
     @Override
     public int getDisplayCategoryIndex() {
         return -10;
+    }
+
+    @Override
+    public Color getNameColor() {
+        return Color.MAGENTA;
     }
 }

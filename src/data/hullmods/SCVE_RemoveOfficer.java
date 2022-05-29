@@ -2,12 +2,11 @@ package data.hullmods;
 
 import com.fs.starfarer.api.GameState;
 import com.fs.starfarer.api.Global;
-import com.fs.starfarer.api.characters.PersonAPI;
 import com.fs.starfarer.api.combat.BaseHullMod;
 import com.fs.starfarer.api.combat.MutableShipStatsAPI;
 import com.fs.starfarer.api.combat.ShipAPI;
+import com.fs.starfarer.api.ui.TooltipMakerAPI;
 import org.apache.log4j.Logger;
-import java.util.ArrayList;
 
 import static data.scripts.SCVE_Utils.getString;
 
@@ -25,8 +24,8 @@ public class SCVE_RemoveOfficer extends BaseHullMod {
 
         // easy way to tell there's no officer already on the ship
         if (!stats.getFleetMember().getCaptain().getNameString().isEmpty()) {
-            PersonAPI person = Global.getFactory().createPerson();
-            stats.getFleetMember().setCaptain(person);
+            //PersonAPI person = Global.getFactory().createPerson();
+            stats.getFleetMember().setCaptain(null);
         }
     }
 
@@ -61,5 +60,10 @@ public class SCVE_RemoveOfficer extends BaseHullMod {
             return false;
         }
         return (!ship.getCaptain().getNameString().isEmpty());
+    }
+
+    @Override
+    public void addPostDescriptionSection(TooltipMakerAPI tooltip, ShipAPI.HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
+        super.addPostDescriptionSection(tooltip, hullSize, ship, width, isForModSpec);
     }
 }

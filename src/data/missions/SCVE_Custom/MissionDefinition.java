@@ -13,7 +13,6 @@ import com.fs.starfarer.api.loading.WeaponSlotAPI;
 import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin;
-import com.fs.starfarer.api.util.Pair;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,10 +29,8 @@ public class MissionDefinition implements MissionDefinitionPlugin {
 
     private final Logger log = Global.getLogger(MissionDefinition.class);
 
-    // usually you can only access the system id and mass of a ship from its ShipAPI
-    // pair.one = system id
-    // pair.two = mass
-    public static HashMap<String, Pair<String, Float>> hullIdToSpecialStatsMap = new HashMap<>();
+    // usually you can only access the mass of a ship from its ShipAPI
+    public static HashMap<String, Float> hullIdToMassMap = new HashMap<>();
     public static String CUSTOM_MISSION_PATH = "custom_mission.csv";
 
     @Override
@@ -64,7 +61,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 ShipHullSpecAPI shipHullSpec = Global.getSettings().getHullSpec(id);
                 if (validateHullSpec(shipHullSpec, blacklistedShips)) {
                     // get special stats
-                    hullIdToSpecialStatsMap.put(id, new Pair<>(shipRow.getString("system id"), (float) shipRow.getDouble("mass")));
+                    hullIdToMassMap.put(id, (float) shipRow.getDouble("mass"));
                     // check if valid member
                     boolean addToMission = true;
                     for (int j = 0; j < customCSV.length(); j++) {
@@ -88,25 +85,13 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 }
 
             }
-            // skins - needs to be done separately to get system/mass if possible
+            // skins - needs to be done separately to get mass if possible
             for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
                 if (shipHullSpec.isBaseHull() || !(validateHullSpec(shipHullSpec, blacklistedShips))) { // skip base hulls and modules/stations
                     continue;
                 }
                 String id = shipHullSpec.getHullId();
-                String[] shipFilePathArray = shipHullSpec.getShipFilePath().split("data\\\\hulls\\\\");
-                String shipFilePath = "data/hulls/" + shipFilePathArray[shipFilePathArray.length - 1].replace("\\", "/");
-                String systemId;
-                float mass;
-                // get special stats
-                mass = hullIdToSpecialStatsMap.get(shipHullSpec.getBaseHullId()).two;
-                try {
-                    systemId = Global.getSettings().loadJSON(shipFilePath).getString("systemId");
-                    hullIdToSpecialStatsMap.put(id, new Pair<>(systemId, mass));
-                } catch (JSONException e) {
-                    systemId = hullIdToSpecialStatsMap.get(shipHullSpec.getBaseHullId()).one;
-                }
-                hullIdToSpecialStatsMap.put(id, new Pair<>(systemId, mass));
+                hullIdToMassMap.put(id, hullIdToMassMap.get(shipHullSpec.getBaseHullId())); //take bass hull id mass
                 // check if valid member
                 boolean valid = true;
                 for (int j = 0; j < customCSV.length(); j++) {
@@ -170,7 +155,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         return filterList;
     }
 
-    // todo weapons
     public boolean validateShipStat(String hullId, String stat, String operator, String value) {
         ShipHullSpecAPI shipHullSpec = Global.getSettings().getHullSpec(hullId);
         float base;
@@ -199,10 +183,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 stringToCheck = shipHullSpec.getManufacturer();
                 break;
             case "system id": // todo: maybe more details like cd/charges?
-                stringToCheck = hullIdToSpecialStatsMap.get(hullId).one;
+                stringToCheck = shipHullSpec.getShipSystemId();
                 break;
             case "system name":
-                stringToCheck = Global.getSettings().getShipSystemSpec(hullIdToSpecialStatsMap.get(hullId).one).getName();
+                stringToCheck = Global.getSettings().getShipSystemSpec(shipHullSpec.getShipSystemId()).getName();
                 break;
             case "defense type": // todo: color, radius?
                 stringToCheck = shipHullSpec.getDefenseType().name();
@@ -272,14 +256,14 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 floatToCheck = stats.getTurnAcceleration().getModifiedValue();
                 break;
             case "mass":
-                floatToCheck = hullIdToSpecialStatsMap.get(hullId).two;
+                floatToCheck = hullIdToMassMap.get(hullId);
                 break;
             case "shield arc":
                 base = shipHullSpec.getShieldSpec().getArc();
                 floatToCheck = stats.getShieldArcBonus().computeEffective(base);
                 break;
             case "shield upkeep":
-                base = shipHullSpec.getShieldSpec().getUpkeepCost() / Math.max(0.0001f,stats.getFluxDissipation().getModifiedValue());
+                base = shipHullSpec.getShieldSpec().getUpkeepCost() / Math.max(0.0001f, stats.getFluxDissipation().getModifiedValue());
                 floatToCheck = base * stats.getShieldUpkeepMult().getModifiedValue();
                 break;
             case "shield efficiency":

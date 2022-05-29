@@ -1,6 +1,6 @@
 name,id,tier,rarity,tech/manufacturer,tags,uiTags,base value,unlocked,hidden,hiddenEverywhere,cost_frigate,cost_dest,cost_cruiser,cost_capital,script,desc,short,sprite
-Convert to Perma Mod,SCVE_integratehullmod,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_IntegrateHullmod,Converts the last-added hullmod into a perma-mod. Will s-mod: %s.,,graphics/icons/industry/exports40b.png
-Remove Last Perma Mod,SCVE_disintegratehullmod,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_DisIntegrateHullmod,Converts the last-added perma-mod into a regular hullmod. Will remove perma-mod: %s.,,graphics/icons/intel/cancel20.png
-Add Officer,SCVE_addofficer,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_AddOfficer,Adds an officer. Specified in %s. %s %s,,graphics/icons/tactical/cr_tactical3.png
+Convert to Perma Mod,SCVE_integratehullmod,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_IntegrateHullmod,Converts the last-added hullmod into a perma-mod.,,graphics/icons/industry/exports40b.png
+Remove Last Perma Mod,SCVE_disintegratehullmod,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_DisIntegrateHullmod,Converts the last-added perma-mod into a regular hullmod.,,graphics/icons/intel/cancel20.png
+Add Officer,SCVE_addofficer,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_AddOfficer,Adds an officer. Specified in %s.,,graphics/icons/tactical/cr_tactical3.png
 Remove Officer,SCVE_removeofficer,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_RemoveOfficer,Removes any officer present on the ship.,,graphics/icons/intel/cancel20.png
 Officer Details,SCVE_officerdetails,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_OfficerDetails,Describes officer details.,,graphics/icons/intel/important.png

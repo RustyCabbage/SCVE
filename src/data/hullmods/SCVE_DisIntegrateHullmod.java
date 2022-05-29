@@ -6,6 +6,8 @@ import com.fs.starfarer.api.combat.BaseHullMod;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipAPI.HullSize;
 import com.fs.starfarer.api.impl.campaign.ids.Tags;
+import com.fs.starfarer.api.ui.TooltipMakerAPI;
+import com.fs.starfarer.api.util.Misc;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -57,21 +59,24 @@ public class SCVE_DisIntegrateHullmod extends BaseHullMod {
         if (Global.getSettings().getCurrentState() != GameState.TITLE) {
             return false;
         }
-        return !ship.getVariant().getPermaMods().isEmpty();
+        for (String permaModId : ship.getVariant().getPermaMods()) {
+            if (ship.getVariant().getSMods().contains(permaModId)
+                    || Global.getSettings().getHullModSpec(permaModId).hasTag(Tags.HULLMOD_DMOD)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public String getDescriptionParam(int index, HullSize hullSize, ShipAPI ship) {
+    public void addPostDescriptionSection(TooltipMakerAPI tooltip, HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
         ArrayList<String> sMods = new ArrayList<>(ship.getVariant().getSMods());
 
         String lastSModName = "";
         if (!sMods.isEmpty()) {
             String id = sMods.get(sMods.size() - 1);
             lastSModName = Global.getSettings().getHullModSpec(id).getDisplayName();
+            tooltip.addPara("Will remove s-mod: %s.", 10f, Misc.getHighlightColor(), lastSModName);
         }
-        if (index == 0) {
-            return lastSModName;
-        }
-        return null;
     }
 }

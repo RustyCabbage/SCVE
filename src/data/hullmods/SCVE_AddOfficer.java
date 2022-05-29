@@ -3,22 +3,22 @@ package data.hullmods;
 import com.fs.starfarer.api.GameState;
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.characters.PersonAPI;
+import com.fs.starfarer.api.characters.SkillSpecAPI;
 import com.fs.starfarer.api.combat.BaseHullMod;
 import com.fs.starfarer.api.combat.MutableShipStatsAPI;
 import com.fs.starfarer.api.combat.ShipAPI;
-import com.fs.starfarer.api.combat.ShipAPI.HullSize;
 import com.fs.starfarer.api.combat.ShipVariantAPI;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.impl.campaign.ids.Factions;
-import com.fs.starfarer.api.impl.campaign.ids.HullMods;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
+import com.fs.starfarer.api.util.Misc;
 import org.apache.log4j.Logger;
-
-import java.io.IOException;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.awt.*;
+import java.io.IOException;
 
 import static data.scripts.SCVE_Utils.getString;
 
@@ -48,10 +48,6 @@ public class SCVE_AddOfficer extends BaseHullMod {
     public void applyEffectsAfterShipCreation(ShipAPI ship, String id) {
         ship.getVariant().removeMod(spec.getId());
         ship.getVariant().removePermaMod(spec.getId());
-        //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return;
-        }
     }
 
     @Override
@@ -72,6 +68,47 @@ public class SCVE_AddOfficer extends BaseHullMod {
         return (ship.getCaptain().getNameString().isEmpty());
     }
 
+    @Override
+    public String getDescriptionParam(int index, ShipAPI.HullSize hullSize) {
+        if (index == 0) {
+            return CUSTOM_OFFICER_FILE_PATH;
+        }
+        return null;
+    }
+
+    @Override
+    public void addPostDescriptionSection(TooltipMakerAPI tooltip, ShipAPI.HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
+        try {
+            JSONObject settings = Global.getSettings().loadJSON(CUSTOM_OFFICER_FILE_PATH, "ShipCatalogVariantEditor");
+            int officerLevel = 0;
+            String personality = settings.optString("personality", "steady");
+            tooltip.addPara("Will add a Level %s %s officer with the following skills:", 10f,
+                    Misc.getHighlightColor(), Integer.toString(officerLevel), personality);
+            JSONArray keys = settings.names();
+            // i = 0 is personality so start at i = 1
+            for (int i = 1; i < keys.length(); i++) {
+                String skillId = keys.getString(i);
+                int skillLevel = Math.min(2, Math.max(0, settings.optInt(skillId)));
+                if (skillLevel > 0) {
+                    SkillSpecAPI skill = Global.getSettings().getSkillSpec(skillId);
+                    String skillSprite = skill.getSpriteName();
+                    String skillName = skill.getName();
+                    String eliteText = "", eliteTextPre = "", eliteTextPost = "";
+                    if (skillLevel == 2) {
+                        eliteTextPre = " (";
+                        eliteText = "ELITE";
+                        eliteTextPost = ")";
+                    }
+                    TooltipMakerAPI skillImageWithText = tooltip.beginImageWithText(skillSprite, 40);
+                    skillImageWithText.addPara(skillName + eliteTextPre + eliteText + eliteTextPost, 0, Color.GREEN, eliteText);
+                    tooltip.addImageWithText(10f);
+                }
+            }
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static PersonAPI createCustomOfficer() {
         PersonAPI officer = Global.getSector().getFaction(Factions.PLAYER).createRandomPerson();
         int officerLevel = 0;
@@ -84,11 +121,12 @@ public class SCVE_AddOfficer extends BaseHullMod {
             officer.setPersonality(personality);
 
             JSONArray keys = settings.names();
+            // i = 0 is personality so start at i = 1
             for (int i = 1; i < keys.length(); i++) {
-                String skill = keys.getString(i);
-                int level = Math.min(2,Math.max(0,settings.optInt(skill)));
-                if (level > 0) {
-                    officer.getStats().setSkillLevel(skill, level);
+                String skillId = keys.getString(i);
+                int skillLevel = Math.min(2, Math.max(0, settings.optInt(skillId)));
+                if (skillLevel > 0) {
+                    officer.getStats().setSkillLevel(skillId, skillLevel);
                     officerLevel++;
                 }
             }

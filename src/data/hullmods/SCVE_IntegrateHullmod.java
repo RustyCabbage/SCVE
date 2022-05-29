@@ -6,6 +6,8 @@ import com.fs.starfarer.api.combat.BaseHullMod;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipAPI.HullSize;
 import com.fs.starfarer.api.impl.campaign.ids.Tags;
+import com.fs.starfarer.api.ui.TooltipMakerAPI;
+import com.fs.starfarer.api.util.Misc;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
@@ -57,17 +59,13 @@ public class SCVE_IntegrateHullmod extends BaseHullMod {
     }
 
     @Override
-    public String getDescriptionParam(int index, HullSize hullSize, ShipAPI ship) {
+    public void addPostDescriptionSection(TooltipMakerAPI tooltip, HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
         ArrayList<String> hullmods = (ArrayList<String>) ship.getVariant().getNonBuiltInHullmods();
 
-        String lastHullmod = null;
         if (!hullmods.isEmpty()) {
             String id = hullmods.get(hullmods.size() - 1);
-            lastHullmod = Global.getSettings().getHullModSpec(id).getDisplayName();
+            String lastHullmodName = Global.getSettings().getHullModSpec(id).getDisplayName();
+            tooltip.addPara("Will s-mod: %s.", 10f, Misc.getHighlightColor(), lastHullmodName);
         }
-        if (index == 0) {
-            return lastHullmod;
-        }
-        return null;
     }
 }
