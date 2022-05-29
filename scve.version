@@ -6,8 +6,8 @@
     "modVersion":
     {
         "major":1,
-        "minor":6,
-        "patch":"1"
+        "minor":7,
+        "patch":"0"
     },
-    "directDownloadURL":"https://github.com/RustyCabbage/ShipCatalogueVariantEditor/releases/download/v1.6.1/SCVE.v1.6.1.zip",
+    "directDownloadURL":"https://github.com/RustyCabbage/ShipCatalogueVariantEditor/releases/download/v1.7.0/SCVE.v1.7.0.zip",
 }

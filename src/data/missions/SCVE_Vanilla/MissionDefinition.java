@@ -29,7 +29,8 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         for (FleetMemberAPI member : getVanillaFleetMembers(blacklistedShips)) {
             // don't use api.addFleetMember() because then the ships start at 0 CR
             String variantId = member.getVariant().getHullVariantId();
-            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
+            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP,
+                    MOD_PREFIX + " " + member.getHullId(), flagship);
             if (flagship) {
                 flagship = false;
             }

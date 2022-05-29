@@ -31,6 +31,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             initializeMission(api, getString("modNoMods"), null);
             api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
                     getString("modNoMods"), false);
+            return;
         } else {
             String currentModId = getCurrentMod();
             String currentModName = Global.getSettings().getModManager().getModSpec(currentModId).getName();
@@ -48,7 +49,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 boolean flagship = true;
                 for (FleetMemberAPI member : getModFleetMembers(shipList)) {
                     String variantId = member.getVariant().getHullVariantId();
-                    FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
+                    FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, MOD_PREFIX + " " + member.getHullId(), flagship);
                     if (flagship) {
                         flagship = false;
                     }

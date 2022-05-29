@@ -93,7 +93,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 String id = shipHullSpec.getHullId();
                 hullIdToMassMap.put(id, hullIdToMassMap.get(shipHullSpec.getBaseHullId())); //take bass hull id mass
                 // check if valid member
-                boolean valid = true;
+                boolean addToMission = true;
                 for (int j = 0; j < customCSV.length(); j++) {
                     JSONObject customRow = customCSV.getJSONObject(j);
                     String parameter = customRow.getString("parameter");
@@ -103,11 +103,11 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                         continue;
                     }
                     if (!validateShipStat(id, parameter, operator, value)) {
-                        valid = false;
+                        addToMission = false;
                         break;
                     }
                 }
-                if (valid) {
+                if (addToMission) {
                     String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
                     FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId); // need to repair...
                     validShipsSet.add(member);
@@ -121,7 +121,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         for (FleetMemberAPI member : validShipsSet) {
             // don't use api.addFleetMember() because then the ships start at 0 CR
             String variantId = member.getVariant().getHullVariantId();
-            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, flagship);
+            FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, MOD_PREFIX + " " + member.getHullId(), flagship);
             if (flagship) {
                 flagship = false;
             }
