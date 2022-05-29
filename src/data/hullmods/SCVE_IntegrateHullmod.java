@@ -18,13 +18,13 @@ public class SCVE_IntegrateHullmod extends BaseHullMod {
 
     @Override
     public void applyEffectsAfterShipCreation(ShipAPI ship, String id) {
-		ship.getVariant().removeMod(spec.getId());
-			ship.getVariant().removePermaMod(spec.getId());
-		//this needs to do nothing if done in campaign
+        ship.getVariant().removeMod(spec.getId());
+        ship.getVariant().removePermaMod(spec.getId());
+        //this needs to do nothing if done in campaign
         if (Global.getSettings().getCurrentState() != GameState.TITLE) {
             return;
         }
-        
+
         ArrayList<String> hullmods = (ArrayList<String>) ship.getVariant().getNonBuiltInHullmods();
         if (!hullmods.isEmpty()) {
             String last = hullmods.get(hullmods.size() - 1);

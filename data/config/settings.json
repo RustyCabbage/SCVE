@@ -1,22 +1,25 @@
 {
-  # SHIP FILTERS
-  # 0 = block all spoilers
-  # 1 = block heavy spoilers
-  # 2 = block no spoilers,
-  "SCVE_defaultShipFilter": 0,
+    # SHIP FILTERS
+    # 0 = block all spoilers
+    # 1 = block heavy spoilers
+    # 2 = block no spoilers,
+    # Default 0
+    "SCVE_defaultShipFilter": 0,
 
-  # WEAPON FILTERS
-  # 0 = block all weapons not from the mod
-  # 1 = block all mod weapons not from the mod
-  # 2 = default (block restricted weapons)
-  # 3 = allow all weapons
-  # 4 = custom filter
-  "SCVE_defaultWeaponWingFilter": 2,
+    # WEAPON FILTERS
+    # 0 = block all weapons not from the mod
+    # 1 = block all mod weapons not from the mod
+    # 2 = default (block restricted weapons)
+    # 3 = allow all weapons
+    # 4 = custom filter
+    # Default 2
+    "SCVE_defaultWeaponWingFilter": 2,
 
-  # HULLMOD FILTERS
-  # 0 - default
-  # 1 - show s-mods
-  # 2 - show d-mods
-  # 3 - show all hullmods,
-  "SCVE_defaultHullModFilter": 0,
+    # HULLMOD FILTERS
+    # 0 - default
+    # 1 - show s-mods
+    # 2 - show d-mods
+    # 3 - show all hullmods,
+    # Default 0
+    "SCVE_defaultHullModFilter": 0,
 }

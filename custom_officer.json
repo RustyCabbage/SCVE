@@ -1,0 +1,23 @@
+{
+    # USED FOR THE Add Officer HullMod
+    # Can be "timid", "cautious", "steady", "aggressive", "reckless"
+    # Will default to steady if you make a typo.
+    "personality": "steady",
+
+    # OFFICER SKILLS
+    # Skill level can be 0 to 2
+    "helmsmanship":             0,
+    "combat_endurance":         0,
+    "impact_mitigation":        0,
+    "damage_control":           0,
+    "field_modulation":         0,
+    "point_defense":            0,
+    "target_analysis":          0,
+    "ballistic_mastery":        0,
+    "systems_expertise":        0,
+    "missile_specialization":   0,
+    "gunnery_implants":         0,
+    "energy_weapon_mastery":    0,
+    "ordnance_expert":          0,
+    "polarized_armor":          0,
+}
