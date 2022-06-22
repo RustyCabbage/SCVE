@@ -160,13 +160,21 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     error += getString("validateFighterShields") + variant.getHullSpec().getShieldSpec().getFluxPerDamageAbsorbed() + ", ";
                 }
                 // check for SO on fighters, which will cause crashes I think
-                if (variant.getHullMods().contains(HullMods.SAFETYOVERRIDES)
-                        || variant.getHullSpec().getBuiltInMods().contains(HullMods.SAFETYOVERRIDES)) {
+                if (variant.getHullMods().contains(HullMods.SAFETYOVERRIDES)) {
+                    if (variant.getHullSpec().getBuiltInMods().contains(HullMods.SAFETYOVERRIDES)) {
+                        log.info("--------------------------------------------");
+                        log.info("ERROR: Fighter " + variant.getHullSpec().getHullId() + " has SO and will cause a crash");
+                        log.info("--------------------------------------------");
+                        api.addBriefingItem("ERROR: Fighter " + variant.getHullSpec().getHullId() + " has SO and will cause a crash");
+                    }
                     error += getString("validateFighterSO") + ": " + variant.getHullVariantId() + ", ";
                 }
             }
             if (!error.isEmpty()) {
                 if (error.contains(getString("validateFighterSO"))) {
+                    if (variant.getHullSpec().getBuiltInMods().contains(HullMods.SAFETYOVERRIDES)) {
+                        continue;
+                    }
                     FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, variant.getHullSpec().getHullId() + HULL_SUFFIX);
                     badFleetMemberMap.put(member, error);
                 } else {
