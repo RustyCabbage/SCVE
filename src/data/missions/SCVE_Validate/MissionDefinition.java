@@ -6,6 +6,7 @@ import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipVariantAPI;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.fleet.FleetMemberType;
+import com.fs.starfarer.api.impl.campaign.ids.HullMods;
 import com.fs.starfarer.api.loading.WeaponSlotAPI;
 import com.fs.starfarer.api.loading.WeaponSpecAPI;
 import com.fs.starfarer.api.mission.FleetSide;
@@ -158,10 +159,20 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                         && variant.getHullSpec().getShieldSpec().getFluxPerDamageAbsorbed() < 1f) {
                     error += getString("validateFighterShields") + variant.getHullSpec().getShieldSpec().getFluxPerDamageAbsorbed() + ", ";
                 }
+                // check for SO on fighters, which will cause crashes I think
+                if (variant.getHullMods().contains(HullMods.SAFETYOVERRIDES)
+                        || variant.getHullSpec().getBuiltInMods().contains(HullMods.SAFETYOVERRIDES)) {
+                    error += getString("validateFighterSO") + ": " + variant.getHullVariantId() + ", ";
+                }
             }
             if (!error.isEmpty()) {
-                FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, variant);
-                badFleetMemberMap.put(member, error);
+                if (error.contains(getString("validateFighterSO"))) {
+                    FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, variant.getHullSpec().getHullId() + HULL_SUFFIX);
+                    badFleetMemberMap.put(member, error);
+                } else {
+                    FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, variant);
+                    badFleetMemberMap.put(member, error);
+                }
             }
         }
         if (badFleetMemberMap.entrySet().isEmpty()) {

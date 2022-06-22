@@ -1,6 +1,10 @@
 {
   "SCVE": {
     "fleetPrefix": "SCVE",
+    "hullSuffix": "_Hull",
+    "shipDataCSV": "data/hulls/ship_data.csv",
+    "weaponDataCSV": "data/weapons/weapon_data.csv",
+    "wingDataCSV": "data/hulls/wing_data.csv",
     "vanillaTagline": "Vanilla Ships",
     "modBriefing": "Mod List: ",
     "modBriefingHL": "**",
@@ -45,5 +49,6 @@
     "validateHardpoints": "WIDE HARDPOINTS ",
     "validateTurrets": "NARROW TURRETS ",
     "validateFighterShields": "FIGHTER SHIELD <1 EFFICIENCY ",
+    "validateFighterSO": "OVERDRIVEN FIGHTER",
   }
 }

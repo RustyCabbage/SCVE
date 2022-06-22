@@ -27,7 +27,7 @@ public class SCVE_Utils {
             //MOD_ID = "ShipCatalogueVariantEditor",
             MOD_PREFIX = "SCVE",
             VANILLA_CATEGORY = "SCVE_Vanilla",
-            HULL_SUFFIX = "_Hull",
+            HULL_SUFFIX = "_Hull", //todo replace with getString("hullSuffix")
             SHIP_DATA_CSV = "data/hulls/ship_data.csv",
             WEAPON_DATA_CSV = "data/weapons/weapon_data.csv",
             WING_DATA_CSV = "data/hulls/wing_data.csv";

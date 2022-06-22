@@ -80,10 +80,10 @@ public class SCVE_AddOfficer extends BaseHullMod {
     public void addPostDescriptionSection(TooltipMakerAPI tooltip, ShipAPI.HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
         try {
             JSONObject settings = Global.getSettings().loadJSON(CUSTOM_OFFICER_FILE_PATH, "ShipCatalogVariantEditor");
-            int officerLevel = 0;
+            //int officerLevel = 0;
             String personality = settings.optString("personality", "steady");
-            tooltip.addPara("Will add a Level %s %s officer with the following skills:", 10f,
-                    Misc.getHighlightColor(), Integer.toString(officerLevel), personality);
+            tooltip.addPara("Will add a %s officer with the following skills:", 10f,
+                    Misc.getHighlightColor(), personality);
             JSONArray keys = settings.names();
             // i = 0 is personality so start at i = 1
             for (int i = 1; i < keys.length(); i++) {
