@@ -76,7 +76,7 @@ public class SCVE_DisIntegrateHullmod extends BaseHullMod {
         if (!sMods.isEmpty()) {
             String id = sMods.get(sMods.size() - 1);
             lastSModName = Global.getSettings().getHullModSpec(id).getDisplayName();
-            tooltip.addPara("Will remove s-mod: %s.", 10f, Misc.getHighlightColor(), lastSModName);
+            tooltip.addPara(getString("hullModRemoveSMod"), 10f, Misc.getHighlightColor(), lastSModName);
         }
     }
 }

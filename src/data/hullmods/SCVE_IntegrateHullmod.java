@@ -65,7 +65,7 @@ public class SCVE_IntegrateHullmod extends BaseHullMod {
         if (!hullmods.isEmpty()) {
             String id = hullmods.get(hullmods.size() - 1);
             String lastHullmodName = Global.getSettings().getHullModSpec(id).getDisplayName();
-            tooltip.addPara("Will s-mod: %s.", 10f, Misc.getHighlightColor(), lastHullmodName);
+            tooltip.addPara(getString("hullModAddSMod"), 10f, Misc.getHighlightColor(), lastHullmodName);
         }
     }
 }

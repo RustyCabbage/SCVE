@@ -93,11 +93,11 @@ public class SCVE_OfficerDetails extends BaseHullMod {
              */
 
             if (isAdmiral) {
-                title = "Admiral details";
-                imageText = "The fleet is headed by the " + shipName + " whose captain is " + fullName + ", a Level " + level + " " + personality + " officer.";
+                title = getString("hullModOfficerDetailAdmiralTitle");
+                imageText = String.format(getString("hullModOfficerDetailAdmiralText"), shipName, fullName, level, personality);
             } else {
-                title = "Officer details";
-                imageText = "The " + shipName + " is piloted by " + fullName + ", a Level " + level + " " + personality + " officer.";
+                title = getString("hullModOfficerDetailOfficerTitle");
+                imageText = String.format(getString("hullModOfficerDetailOfficerText"), shipName, fullName, level, personality);
             }
             tooltip.addSectionHeading(title, Alignment.MID, PAD);
 
@@ -109,7 +109,7 @@ public class SCVE_OfficerDetails extends BaseHullMod {
             tooltip.addImageWithText(PAD);
 
             if (isAdmiral) {
-                tooltip.addSectionHeading("Admiral skills", Alignment.MID, PAD);
+                tooltip.addSectionHeading(getString("hullModOfficerDetailAdmiralSkills"), Alignment.MID, PAD);
 
                 for (SkillLevelAPI skill : skills) {
                     float skillLevel = skill.getLevel();
@@ -126,7 +126,7 @@ public class SCVE_OfficerDetails extends BaseHullMod {
                 }
             }
 
-            tooltip.addSectionHeading("Combat-related skills", Alignment.MID, PAD);
+            tooltip.addSectionHeading(getString("hullModOfficerDetailOfficerSkills"), Alignment.MID, PAD);
 
             for (SkillLevelAPI skill : skills) {
                 float skillLevel = skill.getLevel();
@@ -140,7 +140,7 @@ public class SCVE_OfficerDetails extends BaseHullMod {
                 String eliteText = "", eliteTextPre = "", eliteTextPost = "";
                 if (skillLevel == 2) {
                     eliteTextPre = " (";
-                    eliteText = "ELITE";
+                    eliteText = getString("hullModOfficerDetailElite");
                     eliteTextPost = ")";
                 }
 

@@ -340,10 +340,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             case "maxPieces":
                 floatToCheck = shipHullSpec.getMaxPieces();
                 break;
-            case "sensor profile":
+            case "sensorProfile":
                 floatToCheck = stats.getSensorProfile().getModifiedValue();
                 break;
-            case "sensor strength":
+            case "sensorStrength":
                 floatToCheck = stats.getSensorStrength().getModifiedValue();
                 break;
             case "numModules":
