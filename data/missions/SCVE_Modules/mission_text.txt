@@ -1,0 +1,23 @@
+Workaround for modular ships.
+
+Hold Q or W while clicking on the mission to toggle between hiding ships:
+    - heavy filter (removes HIDE_IN_CODEX) /
+    - light filter (removes restricted) /
+    - no filter
+
+Hold A or S while clicking on the mission to toggle between hiding weapons/wings:
+    - heavy filter (only this mod's weapons/wings) /
+    - light filter (vanilla + this mod's weapons/wings) /
+    - default (all mod weapons/wings + vanilla) /
+    - no filter (including restricted weapons (wings currently glitchy))
+	- custom filter (defined in custom_<weapon/wing>_filter.csv)
+
+Hold Z or X while clicking on the mission to toggle showing/hiding additional hullmods:
+    - default hullmods only /
+    - show add/remove perma-mod hullmods /
+    - show d-mods /
+    - show all hidden mods
+
+Hold SPACE while clicking on the mission to restore default weapon/wing/hullmod availability.
+
+You can find .variant files for the ships you edit in Starsector/saves/missions/SCVE_Mods.

@@ -1,6 +1,7 @@
 {
   "SCVE": {
     "fleetPrefix": "SCVE",
+    "enemyTagline": "Target Practice",
     "hullSuffix": "_Hull",
     "shipDataCSV": "data/hulls/ship_data.csv",
     "weaponDataCSV": "data/weapons/weapon_data.csv",
@@ -15,7 +16,6 @@
     "customTagline": "Custom Ships",
     "customNoFilters": "Error: No Filters Set",
     "customNoShips": "Error: No Ships Found",
-    "enemyTagline": "Target Practice",
     "commonTech": "Common",
     "filterHeavy": "HEAVY",
     "filterLight": "LIGHT",

@@ -431,7 +431,7 @@ public class SCVE_FilterUtils {
             case "groupTag":
                 stringToCheck = weaponSpec.getWeaponGroupTag();
                 break;
-             */
+                */
             case "primaryRoleStr":
                 stringToCheck = weaponSpec.getPrimaryRoleStr();
                 break;
