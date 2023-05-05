@@ -30,7 +30,7 @@ public class SCVE_ModPlugin extends BaseModPlugin {
 
     @Override
     public void onApplicationLoad() {
-        allModules = getAllModules();
+        allModules = getAllModuleIds();
         modToHull = getModToHullListMap(allModules);
         modToWeapon = getModToWeaponListMap();
         modToWing = getModToWingListMap();

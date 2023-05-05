@@ -36,7 +36,7 @@ public class SCVE_Utils {
         return Global.getSettings().getString(MOD_PREFIX, id);
     }
 
-    public static Set<String> getAllModules() {
+    public static Set<String> getAllModuleIds() {
         Set<String> modulesSet = new HashSet<>();
         for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
             if (shipHullSpec.isDefaultDHull()) {
@@ -47,9 +47,8 @@ public class SCVE_Utils {
             for (String moduleId : variant.getStationModules().values()) {
                 modulesSet.add(Global.getSettings().getVariant(moduleId).getHullSpec().getHullId());
             }
-            //modulesSet.addAll(variant.getStationModules().values()); // values() are hull variant ids
         }
-        // remove skins of modules because idk this is a thing with Diable
+        // add skins of modules because idk this is a thing with Diable
         for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
             if (!shipHullSpec.isBaseHull()
                     && modulesSet.contains(shipHullSpec.getBaseHullId())) {

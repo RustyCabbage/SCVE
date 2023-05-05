@@ -5,7 +5,7 @@
   "utility":"true",
   "version":"1.7.2",
   "description":"Creates test missions for more convenient browsing through ship catalogues / variant editing.",
-  "gameVersion":"0.95.1a-RC6",
+  "gameVersion":"0.96a-RC6",
   "jars":["jars/SCVE.jar"],
   "modPlugin":"data.scripts.SCVE_ModPlugin",
 }
