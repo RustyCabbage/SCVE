@@ -577,10 +577,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             case "*":
                 switch (stat) {
                     case "knownShips":
-                        valid = Global.getSettings().getFactionSpec(value).getKnownShips().contains(shipHullSpec.getHullId());
+                        valid = Global.getSettings().getFactionSpec(value).getKnownShips().contains(hullId);
                         break;
                     case "priorityShips":
-                        valid = Global.getSettings().getFactionSpec(value).getPriorityShips().contains(shipHullSpec.getHullId());
+                        valid = Global.getSettings().getFactionSpec(value).getPriorityShips().contains(hullId);
                         break;
                     default:
                         break;

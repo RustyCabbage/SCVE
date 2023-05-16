@@ -20,6 +20,10 @@ trackingStr,,,
 turnRateStr,,,
 accuracyStr,,,
 ,,,
+### Other ###,,,"# Operators: Always ""*"""
+knownWeapons,*,,Should be a faction id
+priorityWeapons,*,,Should be a faction id
+,,,
 ### Arrays ###,,,"# Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. "
 hints,,,
 tags,,,

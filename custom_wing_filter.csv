@@ -5,7 +5,7 @@ parameter,operator,value,notes
 "# Float Operators: </>/=/<=/>=/!=/()/[]/[)/(]. Uses modified values when possible. Interval values should be of the form ""a,b""",,,
 "# Values: String (cAsE SeNSiTiVe) / Array (comma separated (""a,b,c,..."")) / Float",,,
 ,,,
-,,,
+showRestricted,,FALSE,"# If true, will also include restricted weapons if applicable"
 ,,,
 ### Strings ###,,,"# Operators: startsWith/endsWith/contains/in/equals/matches. Prefix with ""!"" to negate. cAsE SeNSiTiVe (except ""equals""). ""matches"" is in regex format."
 id,,,
@@ -15,6 +15,10 @@ formation,,,
 role,,,
 role desc,,,
 defense type,,,
+,,,
+### Other ###,,,"# Operators: Always ""*"""
+knownWings,*,,Should be a faction id
+priorityWings,*,,Should be a faction id
 ,,,
 ### Arrays ###,,,"# Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. "
 tags,,,

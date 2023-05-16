@@ -16,7 +16,7 @@ defense type,,,"Can be ""NONE"", ""FRONT"", ""OMNI"", ""PHASE"""
 hullSize,,,"Can be ""FRIGATE"", ""DESTROYER"", ""CRUISER"", ""CAPITAL_SHIP"""
 ,,,
 ### Other ###,,,"# Operators: Always ""*"""
-knownShips,*,hegemony,Should be a faction id
+knownShips,*,,Should be a faction id
 priorityShips,*,,Should be a faction id
 ,,,
 ### Arrays ###,,,"# Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. "
