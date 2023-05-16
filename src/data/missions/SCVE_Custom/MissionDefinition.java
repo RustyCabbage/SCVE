@@ -9,6 +9,7 @@ import com.fs.starfarer.api.combat.WeaponAPI.WeaponType;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.fleet.FleetMemberType;
 import com.fs.starfarer.api.impl.campaign.ids.Factions;
+import com.fs.starfarer.api.loading.RoleEntryAPI;
 import com.fs.starfarer.api.loading.WeaponSlotAPI;
 import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
@@ -194,6 +195,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             case "hullSize":
                 stringToCheck = shipHullSpec.getHullSize().toString();
                 break;
+            // OTHER
             // ARRAYS
             case "hints":
                 arrayToCheck = Arrays.asList(shipHullSpec.getHints().toString().replaceAll("[\\[\\]]", "").split(", "));
@@ -571,6 +573,18 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 break;
             case "!allIn":
                 valid = !Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            case "*":
+                switch (stat) {
+                    case "knownShips":
+                        valid = Global.getSettings().getFactionSpec(value).getKnownShips().contains(shipHullSpec.getHullId());
+                        break;
+                    case "priorityShips":
+                        valid = Global.getSettings().getFactionSpec(value).getPriorityShips().contains(shipHullSpec.getHullId());
+                        break;
+                    default:
+                        break;
+                }
                 break;
             default:
                 log.error("Unexpected default operator " + operator);

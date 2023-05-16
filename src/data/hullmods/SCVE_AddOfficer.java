@@ -79,7 +79,7 @@ public class SCVE_AddOfficer extends BaseHullMod {
     @Override
     public void addPostDescriptionSection(TooltipMakerAPI tooltip, ShipAPI.HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
         try {
-            JSONObject settings = Global.getSettings().loadJSON(CUSTOM_OFFICER_FILE_PATH, "ShipCatalogVariantEditor");
+            JSONObject settings = Global.getSettings().loadJSON(CUSTOM_OFFICER_FILE_PATH);
             //int officerLevel = 0;
             String personality = settings.optString("personality", "steady");
             tooltip.addPara(getString("hullModAddOfficer"), 10f,
@@ -115,7 +115,7 @@ public class SCVE_AddOfficer extends BaseHullMod {
         officer.getStats().setSkipRefresh(true);
 
         try {
-            JSONObject settings = Global.getSettings().loadJSON(CUSTOM_OFFICER_FILE_PATH, "ShipCatalogVariantEditor");
+            JSONObject settings = Global.getSettings().loadJSON(CUSTOM_OFFICER_FILE_PATH);
 
             String personality = settings.optString("personality", "steady");
             officer.setPersonality(personality);

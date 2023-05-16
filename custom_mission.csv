@@ -15,7 +15,11 @@ system name,,,
 defense type,,,"Can be ""NONE"", ""FRONT"", ""OMNI"", ""PHASE"""
 hullSize,,,"Can be ""FRIGATE"", ""DESTROYER"", ""CRUISER"", ""CAPITAL_SHIP"""
 ,,,
-### Arrays,,,"# Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. "
+### Other ###,,,"# Operators: Always ""*"""
+knownShips,*,hegemony,Should be a faction id
+priorityShips,*,,Should be a faction id
+,,,
+### Arrays ###,,,"# Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. "
 hints,,,
 tags,,,
 builtInMods,,,
