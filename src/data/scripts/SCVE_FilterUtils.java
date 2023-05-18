@@ -464,6 +464,10 @@ public class SCVE_FilterUtils {
                 stringToCheck = weaponSpec.getAutofitCategory();
                 break;
              */
+            // OTHER
+            case "knownWeapons":
+            case "priorityWeapons":
+                break;
             // ARRAYS
             case "hints":
                 arrayToCheck = Arrays.asList(weaponSpec.getAIHints().toString().replaceAll("[\\[\\]]", "").split(", "));
@@ -574,7 +578,7 @@ public class SCVE_FilterUtils {
                 break;
              */
             default:
-                log.error("Unexpected default parameter");
+                log.error("Unexpected default parameter: " + stat);
         }
         switch (operator) {
             case "startsWith":
@@ -704,7 +708,7 @@ public class SCVE_FilterUtils {
         float floatToCheck = Float.NaN, lower, upper;
         List<String> arrayToCheck = new ArrayList<>();
         CampaignFleetAPI fleet = Global.getFactory().createEmptyFleet(Factions.PLAYER, "fleet", true); // aiMode=true means no crew required
-        FleetMemberAPI member = fleet.getFleetData().addFleetMember(wingId + HULL_SUFFIX);
+        FleetMemberAPI member = fleet.getFleetData().addFleetMember(wingSpec.getVariantId());
         member.updateStats(); // fixes it being set to 0 CR and having -10% on a bunch of stats
         MutableShipStatsAPI stats = member.getStats();
         boolean valid = false;
@@ -730,6 +734,10 @@ public class SCVE_FilterUtils {
                 break;
             case "defense type":
                 stringToCheck = wingSpec.getVariant().getHullSpec().getDefenseType().name();
+                break;
+            // OTHER
+            case "knownWings":
+            case "priorityWings":
                 break;
             // ARRAYS
             case "tags":
@@ -825,7 +833,7 @@ public class SCVE_FilterUtils {
                 floatToCheck = stats.getMinCrewMod().computeEffective(base); // todo same as max crew in vanilla, should check with mods...
                 break;
             default:
-                log.error("Unexpected default parameter");
+                log.error("Unexpected default parameter: " + stat);
         }
         switch (operator) {
             case "startsWith":

@@ -196,6 +196,9 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 stringToCheck = shipHullSpec.getHullSize().toString();
                 break;
             // OTHER
+            case "knownShips":
+            case "priorityShips":
+                break;
             // ARRAYS
             case "hints":
                 arrayToCheck = Arrays.asList(shipHullSpec.getHints().toString().replaceAll("[\\[\\]]", "").split(", "));
@@ -368,8 +371,10 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             case "numLMSlots":
                 checkWeapons = true;
                 break;
+            case "":
+                break;
             default:
-                log.error("Unexpected default parameter");
+                log.error("Unexpected default parameter: " + stat);
         }
         if (checkWeapons) {
             List<WeaponSlotAPI> weaponSlots = shipHullSpec.getAllWeaponSlotsCopy();
@@ -587,7 +592,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 }
                 break;
             default:
-                log.error("Unexpected default operator " + operator);
+                log.error("Unexpected default operator: " + operator);
         }
         return valid;
     }
