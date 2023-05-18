@@ -1,0 +1,10 @@
+ Version 1.7.5
+
+-added ability to check knownShips and priorityShips in custom mission
+-added options for known/priority weapons/wings for custom filters
+-added showRestricted to custom_wing_filter.csv
+-added LunaLib version checker support (as in the changelog. i'll figure the rest out later eventually :tm:)
+
+-fixed issue with Officer Details hullmod crashing. Thanks to Helmut Kohl!
+-fixed invalid weapons being restricted instead of set to unavailable
+-fixed issues with logging that were present in v1.7.4.1
