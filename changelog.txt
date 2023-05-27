@@ -1,4 +1,10 @@
- Version 1.7.5
+Version 1.8.0
+
+- added hullmod filter
+- added new hullmod to save variants to common folder. works in campaign
+- fixed bug with add officer missing one skill
+
+Version 1.7.5
 
 -added ability to check knownShips and priorityShips in custom mission
 -added options for known/priority weapons/wings for custom filters
