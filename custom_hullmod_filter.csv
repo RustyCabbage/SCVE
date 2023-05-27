@@ -1,0 +1,30 @@
+parameter,operator,value,notes
+"# change ""operator"" and ""value"" according to String/Array/Float",,,
+"# String Operators: startsWith/endsWith/contains/in/equals/matches. Prefix with ""!"" to negate. cAsE SeNSiTiVe (except ""equals""). ""matches"" is in regex format.",,,
+"# Array Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. ",,,
+"# Float Operators: </>/=/<=/>=/!=/()/[]/[)/(]. Uses modified values when possible. Interval values should be of the form ""a,b""",,,
+"# Values: String (cAsE SeNSiTiVe) / Array (comma separated (""a,b,c,..."")) / Float",,,
+,,,
+### Strings ###,,,"# Operators: startsWith/endsWith/contains/in/equals/matches. Prefix with ""!"" to negate. cAsE SeNSiTiVe (except ""equals""). ""matches"" is in regex format."
+id,,,
+name,,,
+tech/manufacturer,,,"FYI no manufacturer entry returns ""Common"""
+script,,,
+description,,,"Uses default description"
+sMod description,,,"Uses default description"
+,,,
+### Other ###,,,"# Operators: Always ""*"""
+knownHullMods,*,,Should be a faction id
+,,,
+### Arrays ###,,,"# Operators: containsAll/containsAny/allIn. Prefix with ""!"" to negate. "
+hints,,,
+tags,,,
+,,,
+### Floats ###,,,"# Operators: </>/=/<=/>=/!=/()/[]/[)/(]. Uses modified values when possible. Interval values should be of the form ""a,b"""
+tier,,,
+rarity,,,
+base value,,,
+frigateCost,,,
+destroyerCost,,,
+cruiserCost,,,
+capitalCost,,,

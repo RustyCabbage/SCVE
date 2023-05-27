@@ -121,9 +121,13 @@ public class SCVE_AddOfficer extends BaseHullMod {
             officer.setPersonality(personality);
 
             JSONArray keys = settings.names();
-            // i = 0 is personality so start at i = 1
-            for (int i = 1; i < keys.length(); i++) {
+            //log.info(keys);
+            for (int i = 0; i < keys.length(); i++) {
                 String skillId = keys.getString(i);
+                //log.info(skillId);
+                if (skillId.equals("personality")) {
+                    continue;
+                }
                 int skillLevel = Math.min(2, Math.max(0, settings.optInt(skillId)));
                 if (skillLevel > 0) {
                     officer.getStats().setSkillLevel(skillId, skillLevel);

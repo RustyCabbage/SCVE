@@ -20,6 +20,7 @@
     # 1 - show s-mods
     # 2 - show d-mods
     # 3 - show all hullmods,
+    # 4 - show custom hullmods
     # Default 0
     "SCVE_defaultHullModFilter": 0,
 }

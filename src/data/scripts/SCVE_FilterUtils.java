@@ -3,6 +3,7 @@ package data.scripts;
 import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.campaign.CampaignFleetAPI;
 import com.fs.starfarer.api.combat.MutableShipStatsAPI;
+import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipHullSpecAPI;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.impl.campaign.ids.Factions;
@@ -38,8 +39,10 @@ public class SCVE_FilterUtils {
     public static HashMap<String, Float> ORIGINAL_WEAPON_OP_COST_MAP = new HashMap<>();
     public static HashMap<String, ArrayList<Boolean>> ORIGINAL_HULLMOD_QUALITIES_MAP = new HashMap<>();
     public static HashMap<String, String> ORIGINAL_HULLMOD_NAMES_MAP = new HashMap<>();
+    public static HashMap<String, ArrayList<Integer>> ORIGINAL_HULLMOD_OP_COST_MAP = new HashMap<>();
     public static String CUSTOM_WEAPONS_PATH = "custom_wep_filter.csv";
     public static String CUSTOM_WINGS_PATH = "custom_wing_filter.csv";
+    public static String CUSTOM_HULLMODS_PATH = "custom_hullmod_filter.csv";
 
     private static final String GachaSMods_MOD_ID = "GachaSMods";
 
@@ -61,6 +64,11 @@ public class SCVE_FilterUtils {
             ORIGINAL_HULLMOD_QUALITIES_MAP.put(hullModSpec.getId(),
                     new ArrayList<>(Arrays.asList(hullModSpec.hasTag(Tags.HULLMOD_DMOD), hullModSpec.isHidden(), hullModSpec.isHiddenEverywhere())));
             ORIGINAL_HULLMOD_NAMES_MAP.put(hullModSpec.getId(), hullModSpec.getDisplayName());
+            ORIGINAL_HULLMOD_OP_COST_MAP.put(hullModSpec.getId(),
+                    new ArrayList<>(Arrays.asList(hullModSpec.getFrigateCost()
+                            , hullModSpec.getDestroyerCost()
+                            , hullModSpec.getCruiserCost()
+                            , hullModSpec.getCapitalCost())));
         }
     }
 
@@ -90,6 +98,10 @@ public class SCVE_FilterUtils {
                 hullModSpec.setHidden(ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullModSpec.getId()).get(1));
                 hullModSpec.setHiddenEverywhere(ORIGINAL_HULLMOD_QUALITIES_MAP.get(hullModSpec.getId()).get(2));
                 hullModSpec.setDisplayName(ORIGINAL_HULLMOD_NAMES_MAP.get(hullModSpec.getId()));
+                hullModSpec.setFrigateCost(ORIGINAL_HULLMOD_OP_COST_MAP.get(hullModSpec.getId()).get(0));
+                hullModSpec.setDestroyerCost(ORIGINAL_HULLMOD_OP_COST_MAP.get(hullModSpec.getId()).get(1));
+                hullModSpec.setCruiserCost(ORIGINAL_HULLMOD_OP_COST_MAP.get(hullModSpec.getId()).get(2));
+                hullModSpec.setCapitalCost(ORIGINAL_HULLMOD_OP_COST_MAP.get(hullModSpec.getId()).get(3));
             }
         }
     }
@@ -156,11 +168,11 @@ public class SCVE_FilterUtils {
             if (Keyboard.isKeyDown(Keyboard.KEY_Z)) {
                 hullModFilter--;
                 if (hullModFilter < 0) {
-                    hullModFilter = 3;
+                    hullModFilter = 4;
                 }
             } else if (Keyboard.isKeyDown(Keyboard.KEY_X)) {
                 hullModFilter++;
-                if (hullModFilter > 3) {
+                if (hullModFilter > 4) {
                     hullModFilter = 0;
                 }
             }
@@ -219,6 +231,9 @@ public class SCVE_FilterUtils {
                 break;
             case 3:
                 extraHullModText = getString("filterAllMods");
+                break;
+            case 4:
+                extraHullModText = getString("filterCustomMods");
                 break;
             default: // case 0
                 break;
@@ -350,6 +365,9 @@ public class SCVE_FilterUtils {
                     }
                 }
                 break;
+            case 4: // custom
+                loadCustomHullmodFilter();
+                break;
             default: // case 0
                 break;
         }
@@ -404,7 +422,6 @@ public class SCVE_FilterUtils {
         } catch (IOException | JSONException e) {
             log.error("Could not load " + CUSTOM_WEAPONS_PATH + " or " + CUSTOM_WINGS_PATH, e);
         }
-
     }
 
     public static boolean validateWeaponStat(String weaponId, String stat, String operator, String value) {
@@ -442,16 +459,24 @@ public class SCVE_FilterUtils {
                 stringToCheck = weaponSpec.getPrimaryRoleStr();
                 break;
             case "speedStr":
-                stringToCheck = weaponSpec.getSpeedStr();
+                if (weaponSpec.getSpeedStr() != null) {
+                    stringToCheck = weaponSpec.getSpeedStr();
+                }
                 break;
             case "trackingStr":
-                stringToCheck = weaponSpec.getTrackingStr();
+                if (weaponSpec.getTrackingStr() != null) {
+                    stringToCheck = weaponSpec.getTrackingStr();
+                }
                 break;
             case "turnRateStr":
-                stringToCheck = weaponSpec.getTurnRateStr();
+                if (weaponSpec.getTurnRateStr() != null) {
+                    stringToCheck = weaponSpec.getTurnRateStr();
+                }
                 break;
             case "accuracyStr":
-                stringToCheck = weaponSpec.getAccuracyStr();
+                if (weaponSpec.getAccuracyStr() != null) {
+                    stringToCheck = weaponSpec.getAccuracyStr();
+                }
                 break;
             /* don't think anyone wants to use these
             case "customPrimary":
@@ -945,6 +970,219 @@ public class SCVE_FilterUtils {
                         break;
                     case "priorityWings":
                         valid = Global.getSettings().getFactionSpec(value).getPriorityFighters().contains(wingId);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                log.error("Unexpected default operator " + operator);
+        }
+        return valid;
+    }
+
+    public static void loadCustomHullmodFilter() {
+        try {
+            JSONArray customHullModCSV = Global.getSettings().loadCSV(CUSTOM_HULLMODS_PATH);
+            for (HullModSpecAPI hullModSpec : Global.getSettings().getAllHullModSpecs()) {
+                if (hullModSpec.getFrigateCost() == 0
+                        && hullModSpec.getDestroyerCost() == 0
+                        && hullModSpec.getCruiserCost() == 0
+                        && hullModSpec.getCapitalCost() == 0) {
+                    continue;
+                }
+                for (int j = 0; j < customHullModCSV.length(); j++) {
+                    JSONObject customRow = customHullModCSV.getJSONObject(j);
+                    String parameter = customRow.getString("parameter");
+                    String operator = customRow.getString("operator");
+                    String value = customRow.getString("value");
+                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
+                        continue;
+                    }
+                    if (!validateHullModStat(hullModSpec.getId(), parameter, operator, value)) {
+                        hullModSpec.setFrigateCost(10000);
+                        hullModSpec.setDestroyerCost(10000);
+                        hullModSpec.setCruiserCost(10000);
+                        hullModSpec.setCapitalCost(10000);
+                        break;
+                    }
+                }
+            }
+        } catch (IOException | JSONException e) {
+            log.error("Could not load " + CUSTOM_WEAPONS_PATH + " or " + CUSTOM_WINGS_PATH, e);
+        }
+    }
+
+    // todo add fs_rowSource
+    public static boolean validateHullModStat(String hullModId, String stat, String operator, String value) {
+        HullModSpecAPI hullModSpec = Global.getSettings().getHullModSpec(hullModId);
+        String stringToCheck = "";
+        float floatToCheck = Float.NaN, lower, upper;
+        List<String> arrayToCheck = new ArrayList<>();
+        boolean valid = false;
+        switch (stat) {
+            // STRINGS
+            case "id":
+                stringToCheck = hullModId;
+                break;
+            case "name":
+                stringToCheck = hullModSpec.getDisplayName();
+                break;
+            case "tech/manufacturer":
+                stringToCheck = hullModSpec.getManufacturer();
+                break;
+            case "script":
+                stringToCheck = hullModSpec.getEffectClass();
+                break;
+            case "description":
+                stringToCheck = hullModSpec.getDescription(ShipAPI.HullSize.DEFAULT);
+                break;
+            case "sMod description":
+                stringToCheck = hullModSpec.getSModDescription(ShipAPI.HullSize.DEFAULT);
+                break;
+            // OTHER
+            case "knownHullMods":
+            case "priorityHullMods":
+                break;
+            // ARRAYS
+            case "tags":
+                arrayToCheck = new ArrayList<>(hullModSpec.getTags());
+                break;
+            case "uiTags":
+                arrayToCheck = new ArrayList<>(hullModSpec.getUITags());
+                break;
+            // FLOATS
+            case "tier":
+                floatToCheck = hullModSpec.getTier();
+                break;
+            case "rarity":
+                floatToCheck = hullModSpec.getRarity();
+                break;
+            case "base value":
+                floatToCheck = hullModSpec.getBaseValue();
+                break;
+            case "frigateCost":
+                floatToCheck = hullModSpec.getFrigateCost();
+                break;
+            case "destroyerCost":
+                floatToCheck = hullModSpec.getDestroyerCost();
+                break;
+            case "cruiserCost":
+                floatToCheck = hullModSpec.getCruiserCost();
+                break;
+            case "capitalCost":
+                floatToCheck = hullModSpec.getCapitalCost();
+                break;
+            default:
+                log.error("Unexpected default parameter: " + stat);
+        }
+        switch (operator) {
+            case "startsWith":
+                valid = stringToCheck.startsWith(value);
+                break;
+            case "!startsWith":
+                valid = !stringToCheck.startsWith(value);
+                break;
+            case "endsWith":
+                valid = stringToCheck.endsWith(value);
+                break;
+            case "!endsWith":
+                valid = !stringToCheck.endsWith(value);
+                break;
+            case "contains":
+                if (!stringToCheck.isEmpty()) {
+                    valid = stringToCheck.contains(value);
+                }
+                if (!arrayToCheck.isEmpty()) {
+                    valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                }
+                break;
+            case "!contains":
+                if (!stringToCheck.isEmpty()) {
+                    valid = !stringToCheck.contains(value);
+                }
+                if (!arrayToCheck.isEmpty()) {
+                    valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                }
+                break;
+            case "in":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
+            case "!in":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);
+                break;
+            case "equals":
+                valid = stringToCheck.equalsIgnoreCase(value);
+                break;
+            case "!equals":
+                valid = !stringToCheck.equalsIgnoreCase(value);
+                break;
+            case "matches":
+                valid = stringToCheck.matches(value);
+                break;
+            case "!matches":
+                valid = !stringToCheck.matches(value);
+                break;
+            case "<":
+                valid = floatToCheck < Float.parseFloat(value);
+                break;
+            case ">":
+                valid = floatToCheck > Float.parseFloat(value);
+                break;
+            case "=":
+                valid = floatToCheck == Float.parseFloat(value);
+                break;
+            case "<=":
+                valid = floatToCheck <= Float.parseFloat(value);
+                break;
+            case ">=":
+                valid = floatToCheck >= Float.parseFloat(value);
+                break;
+            case "!=":
+                valid = floatToCheck != Float.parseFloat(value);
+                break;
+            case "()":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck > lower && floatToCheck < upper;
+                break;
+            case "[]":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck >= lower && floatToCheck <= upper;
+                break;
+            case "[)":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck >= lower && floatToCheck < upper;
+                break;
+            case "(]":
+                lower = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[0]);
+                upper = Float.parseFloat(value.replaceAll("[()\\[\\]]", "").split("\\s*,\\s*")[1]);
+                valid = floatToCheck > lower && floatToCheck <= upper;
+                break;
+            case "containsAll":
+                valid = arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "!containsAll":
+                valid = !arrayToCheck.containsAll(Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "containsAny":
+                valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "!containsAny":
+                valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
+                break;
+            case "allIn":
+                valid = Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            case "!allIn":
+                valid = !Arrays.asList(value.split("\\s*,\\s*")).containsAll(arrayToCheck);
+                break;
+            case "*":
+                switch (stat) {
+                    case "knownHullMods":
+                        valid = Global.getSettings().getFactionSpec(value).getKnownHullMods().contains(hullModId);
                         break;
                     default:
                         break;

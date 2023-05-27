@@ -145,7 +145,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
                     continue;
                 }
-                filterList.add(parameter);
+                filterList.add(parameter + " " + operator + " " + value);
             }
         } catch (IOException | JSONException e) {
             log.error("Could not load " + CUSTOM_MISSION_PATH, e);

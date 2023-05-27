@@ -25,6 +25,7 @@
     "filterSMods": "S-MODS",
     "filterDMods": "D-MODS",
     "filterAllMods": "ALL MODS",
+    "filterCustomMods": "CUSTOM MODS",
     "filterBriefingS": "Ships Filtered: ",
     "filterBriefingW": "Weapons/Wings Filtered: ",
     "filterBriefingH": "Extra Hullmods: ",
