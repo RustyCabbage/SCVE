@@ -2,7 +2,7 @@
     # USED FOR THE Add Officer HullMod
     # Can be "timid", "cautious", "steady", "aggressive", "reckless"
     # Will default to steady if you make a typo.
-    "personality": "steady",
+    "personality": "reckless",
 
     # OFFICER SKILLS
     # Skill level can be 0 to 2

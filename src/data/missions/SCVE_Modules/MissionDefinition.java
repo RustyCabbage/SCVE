@@ -16,6 +16,7 @@ import java.util.*;
 
 import static data.scripts.SCVE_ComparatorUtils.memberComparator;
 import static data.scripts.SCVE_FilterUtils.blacklistedShips;
+import static data.scripts.SCVE_ModPlugin.MOD_PREFIX;
 import static data.scripts.SCVE_ModPlugin.modToHull;
 import static data.scripts.SCVE_Utils.*;
 

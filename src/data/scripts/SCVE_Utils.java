@@ -19,13 +19,14 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import static data.scripts.SCVE_ModPlugin.MOD_PREFIX;
+
 public class SCVE_Utils {
 
     private static final Logger log = Global.getLogger(SCVE_Utils.class);
 
     public static final String
             //MOD_ID = "ShipCatalogueVariantEditor",
-            MOD_PREFIX = "SCVE",
             VANILLA_CATEGORY = "SCVE_Vanilla",
             HULL_SUFFIX = "_Hull", //todo replace with getString("hullSuffix")
             SHIP_DATA_CSV = "data/hulls/ship_data.csv",

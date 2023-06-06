@@ -382,14 +382,14 @@ public class SCVE_FilterUtils {
                     String parameter = customRow.getString("parameter");
                     String operator = customRow.getString("operator");
                     String value = customRow.getString("value");
-                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
-                        continue;
-                    }
                     if (parameter.equals("showRestricted")) {
                         boolean showRestricted = Boolean.parseBoolean(value);
                         if (showRestricted) {
                             weaponSpec.getTags().remove(Tags.RESTRICTED);
                         }
+                    }
+                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
+                        continue;
                     }
                     if (!validateWeaponStat(weaponSpec.getWeaponId(), parameter, operator, value)) {
                         weaponSpec.setOrdnancePointCost(10000);
@@ -404,14 +404,14 @@ public class SCVE_FilterUtils {
                     String parameter = customRow.getString("parameter");
                     String operator = customRow.getString("operator");
                     String value = customRow.getString("value");
-                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
-                        continue;
-                    }
                     if (parameter.equals("showRestricted")) {
                         boolean showRestricted = Boolean.parseBoolean(value);
                         if (showRestricted) {
                             wingSpec.getTags().remove(Tags.RESTRICTED);
                         }
+                    }
+                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
+                        continue;
                     }
                     if (!validateWingStat(wingSpec.getId(), parameter, operator, value)) {
                         wingSpec.setOpCost(10000);

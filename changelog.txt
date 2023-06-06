@@ -1,3 +1,8 @@
+Version 1.8.1
+
+- should fix the save variant hullmod showing up in enemy fleets as well as cleaning it of any current saves
+- slight improvements to save variant hullmod - fixes when the variant name includes a space and improvements to module handling
+
 Version 1.8.0
 
 - added hullmod filter
