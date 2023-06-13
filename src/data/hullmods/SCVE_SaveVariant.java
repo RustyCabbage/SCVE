@@ -44,16 +44,19 @@ public class SCVE_SaveVariant extends BaseHullMod {
                 String.format("secondwaveoptions_%s_%s", ship.getHullSpec().getHullId(), ship.getVariant().getDisplayName()));
          */
         writeVariantFile(ship.getVariant(),
-                String.format("%s_%s", ship.getHullSpec().getHullId(), ship.getVariant().getDisplayName()));
+                String.format("%s", ship.getVariant().getDisplayName()));
         if (!ship.getVariant().getStationModules().isEmpty()) {
+            // modules are given the parent ship's name
             for (String variantId : ship.getVariant().getStationModules().values()) {
-                writeVariantFile(Global.getSettings().getVariant(variantId), null);
+                writeVariantFile(Global.getSettings().getVariant(variantId), ship.getVariant().getDisplayName());
             }
         }
     }
 
-    public void writeVariantFile(ShipVariantAPI variant, String variantName) {
+    public void writeVariantFile(ShipVariantAPI variant, String variantFileName) {
         try {
+            String validVariantFileName = variantFileName.replace(" ", "_").replaceAll("[\\\\/:*?\"<>|]", "");
+            log.info(validVariantFileName);
             ArrayList<String> nonBuiltInHullMods = new ArrayList<>(variant.getNonBuiltInHullmods());
             ArrayList<String> permaMods = new ArrayList<>(variant.getPermaMods());
             ArrayList<String> sMods = new ArrayList<>(variant.getSMods());
@@ -73,30 +76,21 @@ public class SCVE_SaveVariant extends BaseHullMod {
                     + createArrayString(nonBuiltInHullMods, ArrayType.hullMods) + newLine
                     + createArrayString(permaMods, ArrayType.permaMods) + newLine
                     + createArrayString(sMods, ArrayType.sMods) + newLine
-                    + createArrayString(suppressedMods, ArrayType.suppressedMods) + newLine;
-            if (variantName == null) {
-                data += String.format("%s\"variantId\": \"%s_%s\",", tab, variant.getHullSpec().getHullId()
-                        , variant.getDisplayName().replace(" ", "_")) + newLine;
-            } else {
-                data += String.format("%s\"variantId\": \"%s\",", tab, variantName.replace(" ", "_")) + newLine;
-            }
+                    + createArrayString(suppressedMods, ArrayType.suppressedMods) + newLine
+                    + String.format("%s\"variantId\": \"%s_%s\",", tab, variant.getHullSpec().getHullId(), validVariantFileName) + newLine;
             data += createWeaponGroupString(variant) + newLine
                     + createArrayString(nonBuiltInWings, ArrayType.wings) + newLine
                     + createModulesString(variant.getStationModules()) + newLine
                     + "}";
             log.info(data);
-            if (variantName == null) {
-                Global.getSettings().writeTextFileToCommon(String.format("SCVE/%s_%s.variant",
-                        variant.getHullSpec().getHullId(), variant.getDisplayName().replace(" ", "_")), data);
-                log.info("Saved to " + String.format("SCVE/%s_%s.variant",
-                        variant.getHullSpec().getHullId(), variant.getDisplayName().replace(" ", "_")));
-            } else {
-                Global.getSettings().writeTextFileToCommon(String.format("SCVE/%s.variant", variantName.replace(" ", "_")), data);
-                log.info("Saved to " + String.format("SCVE/%s.variant", variantName.replace(" ", "_")));
-            }
+            Global.getSettings().writeTextFileToCommon(String.format("SCVE/%s_%s.variant",
+                    variant.getHullSpec().getHullId(), validVariantFileName), data);
+            log.info("Saved to " + String.format("SCVE/%s_%s.variant",
+                    variant.getHullSpec().getHullId(), validVariantFileName));
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     public String createArrayString(ArrayList<String> array, ArrayType type) {
