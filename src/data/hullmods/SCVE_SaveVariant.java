@@ -4,15 +4,18 @@ import com.fs.starfarer.api.Global;
 import com.fs.starfarer.api.combat.BaseHullMod;
 import com.fs.starfarer.api.combat.ShipAPI;
 import com.fs.starfarer.api.combat.ShipVariantAPI;
+import com.fs.starfarer.api.impl.campaign.ids.Sounds;
 import com.fs.starfarer.api.loading.WeaponGroupSpec;
+import com.fs.starfarer.api.ui.Alignment;
 import com.fs.starfarer.api.ui.TooltipMakerAPI;
+import com.fs.starfarer.api.util.Misc;
 import org.apache.log4j.Logger;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class SCVE_SaveVariant extends BaseHullMod {
 
@@ -30,27 +33,22 @@ public class SCVE_SaveVariant extends BaseHullMod {
 
     @Override
     public void applyEffectsAfterShipCreation(ShipAPI ship, String id) {
-        ship.getVariant().removeMod(spec.getId());
-        ship.getVariant().removePermaMod(spec.getId());
-        /*
-        //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return;
-        }
-         */
+        ShipVariantAPI shipVariant = ship.getVariant();
 
-        /*
-        writeVariantFile(ship.getVariant(),
-                String.format("secondwaveoptions_%s_%s", ship.getHullSpec().getHullId(), ship.getVariant().getDisplayName()));
-         */
-        writeVariantFile(ship.getVariant(),
-                String.format("%s", ship.getVariant().getDisplayName()));
-        if (!ship.getVariant().getStationModules().isEmpty()) {
+        shipVariant.removeMod(spec.getId());
+        shipVariant.removePermaMod(spec.getId());
+
+        String variantFileName = String.format("%s_%s", ship.getHullSpec().getHullId(), shipVariant.getDisplayName());
+        writeVariantFile(shipVariant, variantFileName);
+        if (!shipVariant.getStationModules().isEmpty()) {
             // modules are given the parent ship's name
-            for (String variantId : ship.getVariant().getStationModules().values()) {
-                writeVariantFile(Global.getSettings().getVariant(variantId), ship.getVariant().getDisplayName());
+            for (String slotId : shipVariant.getModuleSlots()) {
+                ShipVariantAPI moduleVariant = shipVariant.getModuleVariant(slotId);
+                String moduleVariantFileName = variantFileName.replace(ship.getHullSpec().getHullId(), moduleVariant.getHullSpec().getHullId());
+                writeVariantFile(moduleVariant, shipVariant.getDisplayName(), moduleVariantFileName);
             }
         }
+        Global.getSoundPlayer().playUISound(Sounds.STORY_POINT_SPEND, 1.0f, 1.0f);
     }
 
     public void writeVariantFile(ShipVariantAPI variant, String variantFileName) {
@@ -77,20 +75,19 @@ public class SCVE_SaveVariant extends BaseHullMod {
                     + createArrayString(permaMods, ArrayType.permaMods) + newLine
                     + createArrayString(sMods, ArrayType.sMods) + newLine
                     + createArrayString(suppressedMods, ArrayType.suppressedMods) + newLine
-                    + String.format("%s\"variantId\": \"%s_%s\",", tab, variant.getHullSpec().getHullId(), validVariantFileName) + newLine;
+                    + String.format("%s\"variantId\": \"%s\",", tab, validVariantFileName) + newLine;
             data += createWeaponGroupString(variant) + newLine
                     + createArrayString(nonBuiltInWings, ArrayType.wings) + newLine
-                    + createModulesString(variant.getStationModules()) + newLine
+                    + createModulesString(variant, variantFileName, variant.getModuleSlots()) + newLine
                     + "}";
             log.info(data);
-            Global.getSettings().writeTextFileToCommon(String.format("SCVE/%s_%s.variant",
-                    variant.getHullSpec().getHullId(), validVariantFileName), data);
-            log.info("Saved to " + String.format("SCVE/%s_%s.variant",
-                    variant.getHullSpec().getHullId(), validVariantFileName));
+            Global.getSettings().writeTextFileToCommon(String.format("SCVE/%s.variant",
+                    validVariantFileName), data);
+            log.info("Saved to " + String.format("SCVE/%s.variant",
+                    validVariantFileName));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public String createArrayString(ArrayList<String> array, ArrayType type) {
@@ -120,10 +117,9 @@ public class SCVE_SaveVariant extends BaseHullMod {
         firstLine += newLine;
         String weaponGroupsString = "";
         for (WeaponGroupSpec weaponGroup : weaponGroupSpecList) {
-            /* not sure if this is necessary
             if (weaponGroup.getSlots().isEmpty()) {
                 continue;
-            } */
+            }
             String weaponGroupFirstLine = tab + tab + "{" + newLine;
             String weaponGroupAutofire = String.format("%s%s%s\"autofire\": %s,", tab, tab, tab, weaponGroup.isAutofireOnByDefault()) + newLine;
             String weaponGroupMode = String.format("%s%s%s\"mode\": \"%s\",", tab, tab, tab, weaponGroup.getType().toString()) + newLine;
@@ -139,49 +135,111 @@ public class SCVE_SaveVariant extends BaseHullMod {
         return firstLine + weaponGroupsString + lastLine;
     }
 
-    public String createModulesString(Map<String, String> stationModules) {
+    public String createModulesString(ShipVariantAPI parentVariant, String parentVariantFileName, List<String> moduleSlots) {
         String firstLine = tab + "\"modules\": [";
         String lastLine = tab + "],";
-        if (stationModules.isEmpty()) {
+        if (moduleSlots.isEmpty()) {
             lastLine = "],";
             return firstLine + lastLine;
         }
         firstLine += newLine;
         String modulesString = "";
-        for (String stationModule : stationModules.keySet()) {
-            modulesString += String.format("%s%s{\"%s\": \"%s\"},", tab, tab, stationModule, stationModules.get(stationModule)) + newLine;
+        for (String slotId : parentVariant.getModuleSlots()) {
+            ShipVariantAPI moduleVariant = parentVariant.getModuleVariant(slotId);
+            String moduleVariantFileName = parentVariantFileName.replace(parentVariant.getHullSpec().getHullId(), moduleVariant.getHullSpec().getHullId());
+            modulesString += String.format("%s%s{\"%s\": \"%s\"},", tab, tab, slotId, moduleVariantFileName) + newLine;
         }
         return firstLine + modulesString + lastLine;
     }
 
+    public void writeVariantFile(ShipVariantAPI variant, String variantDisplayName, String variantFileName) {
+        try {
+            String validVariantFileName = variantFileName.replace(" ", "_").replaceAll("[\\\\/:*?\"<>|]", "");
+            log.info(validVariantFileName);
+            ArrayList<String> nonBuiltInHullMods = new ArrayList<>(variant.getNonBuiltInHullmods());
+            ArrayList<String> permaMods = new ArrayList<>(variant.getPermaMods());
+            ArrayList<String> sMods = new ArrayList<>(variant.getSMods());
+            ArrayList<String> suppressedMods = new ArrayList<>(variant.getSuppressedMods());
+            ArrayList<String> nonBuiltInWings = new ArrayList<>(variant.getNonBuiltInWings()); // unsorted
+            Collections.sort(nonBuiltInHullMods);
+            Collections.sort(permaMods);
+            Collections.sort(sMods);
+            Collections.sort(suppressedMods);
+            //log.info(variant.getDisplayName());
+            String data = "{" + newLine
+                    + String.format("%s\"displayName\": \"%s\",", tab, variantDisplayName) + newLine
+                    + String.format("%s\"fluxCapacitors\": %s,", tab, variant.getNumFluxCapacitors()) + newLine
+                    + String.format("%s\"fluxVents\": %s,", tab, variant.getNumFluxVents()) + newLine
+                    + String.format("%s\"goalVariant\": %s,", tab, variant.isGoalVariant()) + newLine
+                    + String.format("%s\"hullId\": \"%s\",", tab, variant.getHullSpec().getHullId()) + newLine
+                    + createArrayString(nonBuiltInHullMods, ArrayType.hullMods) + newLine
+                    + createArrayString(permaMods, ArrayType.permaMods) + newLine
+                    + createArrayString(sMods, ArrayType.sMods) + newLine
+                    + createArrayString(suppressedMods, ArrayType.suppressedMods) + newLine
+                    + String.format("%s\"variantId\": \"%s\",", tab, validVariantFileName) + newLine;
+            data += createWeaponGroupString(variant) + newLine
+                    + createArrayString(nonBuiltInWings, ArrayType.wings) + newLine
+                    + createModulesString(variant, variantFileName, variant.getModuleSlots()) + newLine
+                    + "}";
+            log.info(data);
+            Global.getSettings().writeTextFileToCommon(String.format("SCVE/%s.variant",
+                    validVariantFileName), data);
+            log.info("Saved to " + String.format("SCVE/%s.variant",
+                    validVariantFileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public String getUnapplicableReason(ShipAPI ship) {
-        /*
-        //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return getString("hullModCampaignError");
-        }
-        if (ship.getVariant().getNonBuiltInHullmods().isEmpty()) {
-            return getString("hullModNoHullMods");
-        }
-         */
         return null;
     }
 
     @Override
     public boolean isApplicableToShip(ShipAPI ship) {
-        /*
-        //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return false;
-        }
-         */
         return true;
     }
 
     @Override
     public void addPostDescriptionSection(TooltipMakerAPI tooltip, ShipAPI.HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
+        ShipVariantAPI shipVariant = ship.getVariant();
+        String variantFileName = String.format("%s_%s", ship.getHullSpec().getHullId(), shipVariant.getDisplayName());
+        float pad = 10f;
 
+        tooltip.setBulletedListMode("");
+        tooltip.addSectionHeading("Variants Created", Alignment.MID, pad);
+        tooltip.addPara("Will add the following variants files to %s:", pad, Misc.getHighlightColor(), "../Starsector/saves/common/SCVE/");
+        tooltip.addPara(variantFileName, Misc.getDesignTypeColor(ship.getHullSpec().getManufacturer()), pad);
+        if (!shipVariant.getStationModules().isEmpty()) {
+            // modules are given the parent ship's name
+            for (String slotId : shipVariant.getModuleSlots()) {
+                ShipVariantAPI moduleVariant = shipVariant.getModuleVariant(slotId);
+                String moduleVariantFileName = variantFileName.replace(ship.getHullSpec().getHullId(), moduleVariant.getHullSpec().getHullId());
+                tooltip.addPara(moduleVariantFileName,
+                        Misc.interpolateColor(Misc.getDesignTypeColor(ship.getHullSpec().getManufacturer())
+                                , Misc.getGrayColor(), 0.5f)
+                        , pad / 2f);
+            }
+        }
+
+        tooltip.addSectionHeading("How To Add To Autofit Menu", Alignment.MID, pad);
+        tooltip.setBulletedListMode("- ");
+        tooltip.addPara("Go to %s", pad, Misc.getHighlightColor(), "../Starsector/saves/common/SCVE/");
+        tooltip.addPara("Rename %s.%s to %s (remove %s)", pad / 2f
+                , new Color[]{Misc.getHighlightColor(), Misc.getNegativeHighlightColor()
+                        , Misc.getHighlightColor()
+                        , Misc.getNegativeHighlightColor()}
+                , String.format("%s%s", variantFileName, ".variant"), "data"
+                , String.format("%s%s", variantFileName, ".variant")
+                , ".data");
+        tooltip.addPara("Use a text editor to edit the file and set", pad / 2f);
+        tooltip.addPara("%s %s", 0f
+                , new Color[]{Misc.getTextColor(), Misc.getPositiveHighlightColor()}
+                , tab, "\"goalVariant\": true,");
+        tooltip.addPara("Move %s to a %s folder", pad / 2f, Misc.getHighlightColor()
+                , String.format("%s%s",variantFileName, ".variant"), "../data/variants/");
+        tooltip.addPara("Reload the game!",pad/2f);
     }
 
 }

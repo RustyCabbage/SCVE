@@ -1,7 +1,6 @@
 package data.missions.SCVE_Modules;
 
 import com.fs.starfarer.api.Global;
-import com.fs.starfarer.api.combat.ShipHullSpecAPI;
 import com.fs.starfarer.api.combat.ShipVariantAPI;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.fleet.FleetMemberType;
@@ -34,7 +33,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             initializeMission(api, getString("modNoMods"), null);
             api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
                     getString("modNoMods"), false);
-            return;
         } else {
             String currentModId = getCurrentMod();
             String currentModName = Global.getSettings().getModManager().getModSpec(currentModId).getName();
@@ -149,6 +147,21 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId);
             fleetMemberSet.add(member);
         }
+        /*
+        for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
+            String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
+            ShipVariantAPI variant = Global.getSettings().getVariant(hullVariantId);
+            if (variant == null) continue;
+            if (variant.isStation() || shipHullSpec.getHints().contains(ShipHullSpecAPI.ShipTypeHints.STATION)) {
+                int numModules = variant.getStationModules().size();
+                if (numModules == 0) {
+                    continue;
+                }
+                FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId);
+                fleetMemberSet.add(member);
+            }
+        }
+         */
         return fleetMemberSet;
     }
 }

@@ -4,4 +4,4 @@ Remove Last Perma Mod,SCVE_disintegratehullmod,,,,,{Mission},0,,TRUE,,0,0,0,0,da
 Add Officer,SCVE_addofficer,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_AddOfficer,Adds an officer. Specified in %s.,,graphics/icons/tactical/cr_tactical3.png
 Remove Officer,SCVE_removeofficer,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_RemoveOfficer,Removes any officer present on the ship.,,graphics/icons/intel/cancel20.png
 Officer Details,SCVE_officerdetails,,,,,{Mission},0,,TRUE,,0,0,0,0,data.hullmods.SCVE_OfficerDetails,Describes officer details.,,graphics/icons/intel/important.png
-{Save Variant},SCVariantEditor_saveVariant,,,,,{Mission},0,TRUE,FALSE,,0,0,0,0,data.hullmods.SCVE_SaveVariant,Saves variant file to /common/ folder.,,graphics/icons/skills/special_modifications.png
+{Save Variant},SCVariantEditor_saveVariant,,,,,{Mission},0,TRUE,FALSE,,0,0,0,0,data.hullmods.SCVE_SaveVariant,Saves variant to file,,graphics/icons/skills/special_modifications.png

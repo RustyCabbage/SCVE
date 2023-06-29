@@ -9,7 +9,6 @@ import com.fs.starfarer.api.combat.WeaponAPI.WeaponType;
 import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.fleet.FleetMemberType;
 import com.fs.starfarer.api.impl.campaign.ids.Factions;
-import com.fs.starfarer.api.loading.RoleEntryAPI;
 import com.fs.starfarer.api.loading.WeaponSlotAPI;
 import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
@@ -28,7 +27,6 @@ import static data.scripts.SCVE_ModPlugin.MOD_PREFIX;
 import static data.scripts.SCVE_Utils.*;
 
 public class MissionDefinition implements MissionDefinitionPlugin {
-
     private final Logger log = Global.getLogger(MissionDefinition.class);
 
     // usually you can only access the mass of a ship from its ShipAPI
@@ -37,7 +35,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
 
     @Override
     public void defineMission(MissionDefinitionAPI api) {
-
         // initialize
         ArrayList<String> filterList = createFilterListBriefing(api);
         if (filterList.isEmpty()) {
@@ -57,9 +54,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             for (int i = 0; i < shipCSV.length(); i++) {
                 JSONObject shipRow = shipCSV.getJSONObject(i);
                 String id = shipRow.getString("id");
-                if (id.isEmpty()) {
-                    continue;
-                }
+                if (id.isEmpty()) continue;
                 ShipHullSpecAPI shipHullSpec = Global.getSettings().getHullSpec(id);
                 if (validateHullSpec(shipHullSpec, blacklistedShips)) {
                     // get special stats
@@ -89,9 +84,8 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             }
             // skins - needs to be done separately to get mass if possible
             for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
-                if (shipHullSpec.isBaseHull() || !(validateHullSpec(shipHullSpec, blacklistedShips))) { // skip base hulls and modules/stations
-                    continue;
-                }
+                if (shipHullSpec.isBaseHull() || !(validateHullSpec(shipHullSpec, blacklistedShips)))
+                    continue; // skip base hulls and modules/stations
                 String id = shipHullSpec.getHullId();
                 hullIdToMassMap.put(id, hullIdToMassMap.get(shipHullSpec.getBaseHullId())); //take bass hull id mass
                 // check if valid member
@@ -101,9 +95,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                     String parameter = customRow.getString("parameter");
                     String operator = customRow.getString("operator");
                     String value = customRow.getString("value");
-                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
-                        continue;
-                    }
+                    if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) continue;
                     if (!validateShipStat(id, parameter, operator, value)) {
                         addToMission = false;
                         break;
@@ -124,9 +116,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             // don't use api.addFleetMember() because then the ships start at 0 CR
             String variantId = member.getVariant().getHullVariantId();
             FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, MOD_PREFIX + " " + member.getHullId(), flagship);
-            if (flagship) {
-                flagship = false;
-            }
+            flagship = false;
         }
         if (flagship) {
             api.addToFleet(FleetSide.PLAYER, Global.getSettings().getString("errorShipVariant"), FleetMemberType.SHIP,
@@ -143,9 +133,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 String parameter = customRow.getString("parameter");
                 String operator = customRow.getString("operator");
                 String value = customRow.getString("value");
-                if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) {
-                    continue;
-                }
+                if (parameter.isEmpty() || operator.isEmpty() || value.isEmpty()) continue;
                 filterList.add(parameter + " " + operator + " " + value);
             }
         } catch (IOException | JSONException e) {
@@ -370,6 +358,15 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             case "numLBSlots":
             case "numLESlots":
             case "numLMSlots":
+            case "strictSBSlots":
+            case "strictSESlots":
+            case "strictSMSlots":
+            case "strictMBSlots":
+            case "strictMESlots":
+            case "strictMMSlots":
+            case "strictLBSlots":
+            case "strictLESlots":
+            case "strictLMSlots":
                 checkWeapons = true;
                 break;
             case "":
@@ -382,42 +379,36 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             int
                     numSB = 0, numSE = 0, numSM = 0,
                     numMB = 0, numME = 0, numMM = 0,
-                    numLB = 0, numLE = 0, numLM = 0;
+                    numLB = 0, numLE = 0, numLM = 0,
+                    strictSB = 0, strictSE = 0, strictSM = 0,
+                    strictMB = 0, strictME = 0, strictMM = 0,
+                    strictLB = 0, strictLE = 0, strictLM = 0;
             List<WeaponType> ballistics = Arrays.asList(WeaponType.BALLISTIC, WeaponType.HYBRID, WeaponType.COMPOSITE, WeaponType.UNIVERSAL);
             List<WeaponType> energies = Arrays.asList(WeaponType.ENERGY, WeaponType.HYBRID, WeaponType.SYNERGY, WeaponType.UNIVERSAL);
             List<WeaponType> missiles = Arrays.asList(WeaponType.MISSILE, WeaponType.COMPOSITE, WeaponType.SYNERGY, WeaponType.UNIVERSAL);
             for (WeaponSlotAPI weaponSlot : weaponSlots) {
                 //Pair<WeaponSize, WeaponType> weaponSizeTypePair = new Pair<>(weaponSlot.getSlotSize(), weaponSlot.getWeaponType());
                 if (weaponSlot.getSlotSize() == WeaponSize.SMALL) {
-                    if (ballistics.contains(weaponSlot.getWeaponType())) {
-                        numSB++;
-                    }
-                    if (energies.contains(weaponSlot.getWeaponType())) {
-                        numSE++;
-                    }
-                    if (missiles.contains(weaponSlot.getWeaponType())) {
-                        numSM++;
-                    }
+                    if (ballistics.contains(weaponSlot.getWeaponType())) numSB++;
+                    if (energies.contains(weaponSlot.getWeaponType())) numSE++;
+                    if (missiles.contains(weaponSlot.getWeaponType())) numSM++;
+                    if (weaponSlot.getWeaponType() == WeaponType.BALLISTIC) strictSB++;
+                    if (weaponSlot.getWeaponType() == WeaponType.ENERGY) strictSE++;
+                    if (weaponSlot.getWeaponType() == WeaponType.MISSILE) strictSM++;
                 } else if (weaponSlot.getSlotSize() == WeaponSize.MEDIUM) {
-                    if (ballistics.contains(weaponSlot.getWeaponType())) {
-                        numMB++;
-                    }
-                    if (energies.contains(weaponSlot.getWeaponType())) {
-                        numME++;
-                    }
-                    if (missiles.contains(weaponSlot.getWeaponType())) {
-                        numMM++;
-                    }
+                    if (ballistics.contains(weaponSlot.getWeaponType())) numMB++;
+                    if (energies.contains(weaponSlot.getWeaponType())) numME++;
+                    if (missiles.contains(weaponSlot.getWeaponType())) numMM++;
+                    if (weaponSlot.getWeaponType() == WeaponType.BALLISTIC) strictMB++;
+                    if (weaponSlot.getWeaponType() == WeaponType.ENERGY) strictME++;
+                    if (weaponSlot.getWeaponType() == WeaponType.MISSILE) strictMM++;
                 } else if (weaponSlot.getSlotSize() == WeaponSize.LARGE) {
-                    if (ballistics.contains(weaponSlot.getWeaponType())) {
-                        numLB++;
-                    }
-                    if (energies.contains(weaponSlot.getWeaponType())) {
-                        numLE++;
-                    }
-                    if (missiles.contains(weaponSlot.getWeaponType())) {
-                        numLM++;
-                    }
+                    if (ballistics.contains(weaponSlot.getWeaponType())) numLB++;
+                    if (energies.contains(weaponSlot.getWeaponType())) numLE++;
+                    if (missiles.contains(weaponSlot.getWeaponType())) numLM++;
+                    if (weaponSlot.getWeaponType() == WeaponType.BALLISTIC) strictLB++;
+                    if (weaponSlot.getWeaponType() == WeaponType.ENERGY) strictLE++;
+                    if (weaponSlot.getWeaponType() == WeaponType.MISSILE) strictLM++;
                 }
             }
             int
@@ -473,6 +464,33 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 case "numLMSlots":
                     floatToCheck = numLM;
                     break;
+                case "strictSBSlots":
+                    floatToCheck = strictSB;
+                    break;
+                case "strictSESlots":
+                    floatToCheck = strictSE;
+                    break;
+                case "strictSMSlots":
+                    floatToCheck = strictSM;
+                    break;
+                case "strictMBSlots":
+                    floatToCheck = strictMB;
+                    break;
+                case "strictMESlots":
+                    floatToCheck = strictME;
+                    break;
+                case "strictMMSlots":
+                    floatToCheck = strictMM;
+                    break;
+                case "strictLBSlots":
+                    floatToCheck = strictLB;
+                    break;
+                case "strictLESlots":
+                    floatToCheck = strictLE;
+                    break;
+                case "strictLMSlots":
+                    floatToCheck = strictLM;
+                    break;
                 default:
                     break;
             }
@@ -491,20 +509,14 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 valid = !stringToCheck.endsWith(value);
                 break;
             case "contains":
-                if (!stringToCheck.isEmpty()) {
-                    valid = stringToCheck.contains(value);
-                }
-                if (!arrayToCheck.isEmpty()) {
+                if (!stringToCheck.isEmpty()) valid = stringToCheck.contains(value);
+                if (!arrayToCheck.isEmpty())
                     valid = !Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
-                }
                 break;
             case "!contains":
-                if (!stringToCheck.isEmpty()) {
-                    valid = !stringToCheck.contains(value);
-                }
-                if (!arrayToCheck.isEmpty()) {
+                if (!stringToCheck.isEmpty()) valid = !stringToCheck.contains(value);
+                if (!arrayToCheck.isEmpty())
                     valid = Collections.disjoint(arrayToCheck, Arrays.asList(value.split("\\s*,\\s*")));
-                }
                 break;
             case "in":
                 valid = Arrays.asList(value.split("\\s*,\\s*")).contains(stringToCheck);

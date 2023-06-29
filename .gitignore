@@ -122,4 +122,4 @@ fabric.properties
 .idea/
 *.iml
 .gitattributes
-.run/Selkinium.run.xml
+/.run/
