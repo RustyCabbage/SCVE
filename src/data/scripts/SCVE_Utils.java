@@ -85,10 +85,6 @@ public class SCVE_Utils {
             return false;
         } else return !(shipHullSpec.getHullSize() == ShipAPI.HullSize.FIGHTER
                 || shipHullSpec.getHints().contains(ShipHullSpecAPI.ShipTypeHints.STATION)
-                //|| shipHullSpec.getHullId().matches(STATION_OR_MODULE_REGEX)
-                //|| shipHullSpec.getSpriteName().matches(STATION_OR_MODULE_REGEX)
-                //|| shipHullSpec.getTags().toString().matches(STATION_OR_MODULE_REGEX)
-                //|| shipHullSpec.getBuiltInMods().contains(HullMods.VASTBULK)
                 || blacklist.contains(shipHullSpec.getHullId())
                 || Global.getSettings().getVariant(shipHullSpec.getHullId() + "_Hull").isStation()
                 || (shipHullSpec.getManufacturer().equals(getString("commonTech")) && (!shipHullSpec.hasHullName() || shipHullSpec.getDesignation().isEmpty()))
