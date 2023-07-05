@@ -9,6 +9,6 @@
         "minor":8,
         "patch":"2"
     },
-    "directDownloadURL":"https://github.com/RustyCabbage/ShipCatalogueVariantEditor/releases/download/v1.8.2/SCVE.v1.8.2.zip",
+    "directDownloadURL":"https://github.com/RustyCabbage/ShipCatalogueVariantEditor/releases/download/v1.8.2/SCVE-v1.8.2.zip",
     "changelogURL":"https://raw.githubusercontent.com/RustyCabbage/ShipCatalogueVariantEditor/main/changelog.txt"
 }
