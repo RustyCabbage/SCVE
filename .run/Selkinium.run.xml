@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Selkinium" type="Application" factoryName="Application">
-    <option name="ALTERNATIVE_JRE_PATH" value="$PROJECT_DIR$/../../jdk17" />
+    <option name="ALTERNATIVE_JRE_PATH" value="$PROJECT_DIR$/../../jdk17.0.8_6" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="com.fs.starfarer.StarfarerLauncher" />
     <module name="SCVE" />
