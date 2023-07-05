@@ -1,3 +1,10 @@
+Version 1.8.2
+
+- strict weapon options in custom_weapon.csv (i think i forgor to update the csv)
+- fixed Save Variant working bad with modules. added some description stuff.
+- Fix for invalid file name characters
+- code cleanup
+
 Version 1.8.1
 
 - should fix the save variant hullmod showing up in enemy fleets as well as cleaning it of any current saves
