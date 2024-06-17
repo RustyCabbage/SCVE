@@ -40,9 +40,7 @@ public class SCVE_Utils {
     public static Set<String> getAllModuleIds() {
         Set<String> modulesSet = new HashSet<>();
         for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
-            if (shipHullSpec.isDefaultDHull()) {
-                continue;
-            }
+            if (shipHullSpec.isDefaultDHull()) continue;
             String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
             ShipVariantAPI variant = Global.getSettings().getVariant(hullVariantId);
             for (String moduleId : variant.getStationModules().values()) {
@@ -56,7 +54,6 @@ public class SCVE_Utils {
                 modulesSet.add(shipHullSpec.getHullId());
             }
         }
-        //log.info(modulesSet);
         return modulesSet;
     }
 
@@ -66,7 +63,6 @@ public class SCVE_Utils {
 
     public static void initializeMission(MissionDefinitionAPI api, String playerTagline, String modId, boolean switchFilter) {
         String fleetPrefix = getString("fleetPrefix");
-        //String playerTagline = getString("vanillaTagline");
         String enemyTagLine = getString("enemyTagline");
         float mapSize = 8000f; // multiples of 2000 only
         api.initFleet(FleetSide.PLAYER, fleetPrefix, FleetGoal.ATTACK, true);
@@ -99,10 +95,6 @@ public class SCVE_Utils {
         if (shipHullSpec.isDefaultDHull()) {
             return false;
         } else return !(shipHullSpec.getHints().contains(ShipHullSpecAPI.ShipTypeHints.STATION)
-                //|| shipHullSpec.getHullId().matches(STATION_OR_MODULE_REGEX)
-                //|| shipHullSpec.getSpriteName().matches(STATION_OR_MODULE_REGEX)
-                //|| shipHullSpec.getTags().toString().matches(STATION_OR_MODULE_REGEX)
-                //|| shipHullSpec.getBuiltInMods().contains(HullMods.VASTBULK)
                 || blacklist.contains(shipHullSpec.getHullId())
                 || Global.getSettings().getVariant(shipHullSpec.getHullId() + "_Hull").isStation()
                 || (shipHullSpec.getManufacturer().equals(getString("commonTech")) && (!shipHullSpec.hasHullName() || shipHullSpec.getDesignation().isEmpty()))
@@ -119,8 +111,7 @@ public class SCVE_Utils {
                 JSONObject row = array.getJSONObject(i);
                 String id = row.getString("id");
                 String source = row.getString("fs_rowSource");
-                if (id.isEmpty()
-                        || source.startsWith("null")) { // block vanilla hulls
+                if (id.isEmpty() || source.startsWith("null")) { // block vanilla hulls
                     continue;
                 }
                 ShipHullSpecAPI shipHullSpec = Global.getSettings().getHullSpec(id);
@@ -129,17 +120,12 @@ public class SCVE_Utils {
                     sourceToHullListMap.add(source, id);
                 }
             }
-            //log.info("sourceToHullListMap: " + sourceToHullListMap);
             // convert ListMap keys from sources to mod IDs
             ListMap<String> modToHullListMap = new ListMap<>();
             for (String source : sourceToHullListMap.keySet()) {
                 for (ModSpecAPI modSpec : Global.getSettings().getModManager().getEnabledModsCopy()) {
-                    if (modSpec.isUtility()) { // skip utility mods
-                        continue;
-                    }
-                    if (source.contains(modSpec.getPath())) {
-                        modToHullListMap.put(modSpec.getId(), sourceToHullListMap.getList(source));
-                    }
+                    if (modSpec.isUtility() || !source.contains(modSpec.getPath())) continue;
+                    modToHullListMap.put(modSpec.getId(), sourceToHullListMap.getList(source));
                 }
             }
             // add skins to ListMap
@@ -164,13 +150,10 @@ public class SCVE_Utils {
                 if (!foundBaseHull) {
                     // we can't only include the mods that are already in the list map because some mods don't have any ship_data but do have skins
                     for (ModSpecAPI modSpec : Global.getSettings().getModManager().getEnabledModsCopy()) {
-                        if (modSpec.isUtility()) {
-                            continue;
-                        }
+                        if (modSpec.isUtility()) continue;
                         // check if the .skin file is within that mod
                         try {
-                            String shipFilePath = shipHullSpec.getShipFilePath();
-                            shipFilePath = shipFilePath.replace("\\", "/"); // fix path so that we can load it
+                            String shipFilePath = shipHullSpec.getShipFilePath().replace("\\", "/");
                             Global.getSettings().loadJSON(shipFilePath, modSpec.getId());
                             modToHullListMap.add(modSpec.getId(), hullId);
                         } catch (Exception ignored) {
@@ -199,15 +182,12 @@ public class SCVE_Utils {
                 String source = row.getString("fs_rowSource");
                 if (id.isEmpty()
                         || opCost.isEmpty() // skip weapons with N/A OP cost
-                        || hints.contains("SYSTEM") // system weapons don't show up in mission anyways
-                ) {
+                        || hints.contains("SYSTEM")) {
                     continue;
                 }
                 // vanilla weapons get their own category
-
                 sourceToWeaponListMap.add(source, id);
             }
-            //log.info("sourceToWeaponListMap: " + sourceToWeaponListMap);
             // convert ListMap keys from sources to mod IDs
             ListMap<String> modToWeaponListMap = new ListMap<>();
             for (String source : sourceToWeaponListMap.keySet()) {
@@ -215,12 +195,8 @@ public class SCVE_Utils {
                     modToWeaponListMap.put(VANILLA_CATEGORY, sourceToWeaponListMap.getList(source));
                 } else {
                     for (ModSpecAPI modSpec : Global.getSettings().getModManager().getEnabledModsCopy()) {
-                        if (modSpec.isUtility()) {
-                            continue;
-                        }
-                        if (source.contains(modSpec.getPath())) {
-                            modToWeaponListMap.put(modSpec.getId(), sourceToWeaponListMap.getList(source));
-                        }
+                        if (modSpec.isUtility() || !source.contains(modSpec.getPath())) continue;
+                        modToWeaponListMap.put(modSpec.getId(), sourceToWeaponListMap.getList(source));
                     }
                 }
             }
@@ -240,9 +216,7 @@ public class SCVE_Utils {
                 JSONObject row = array.getJSONObject(i);
                 String id = row.getString("id");
                 String source = row.getString("fs_rowSource");
-                if (id.isEmpty()) {
-                    continue;
-                }
+                if (id.isEmpty()) continue;
                 sourceToWingListMap.add(source, id);
             }
             //log.info("sourceToWingListMap: " + sourceToWingListMap);
@@ -253,12 +227,8 @@ public class SCVE_Utils {
                     modToWingListMap.put(VANILLA_CATEGORY, sourceToWingListMap.getList(source));
                 } else {
                     for (ModSpecAPI modSpec : Global.getSettings().getModManager().getEnabledModsCopy()) {
-                        if (modSpec.isUtility()) {
-                            continue;
-                        }
-                        if (source.contains(modSpec.getPath())) {
-                            modToWingListMap.put(modSpec.getId(), sourceToWingListMap.getList(source));
-                        }
+                        if (modSpec.isUtility() || source.contains(modSpec.getPath())) continue;
+                        modToWingListMap.put(modSpec.getId(), sourceToWingListMap.getList(source));
                     }
                 }
             }

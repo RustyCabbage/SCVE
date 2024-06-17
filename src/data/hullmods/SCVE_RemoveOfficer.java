@@ -18,48 +18,32 @@ public class SCVE_RemoveOfficer extends BaseHullMod {
     @Override
     public void applyEffectsBeforeShipCreation(ShipAPI.HullSize hullSize, MutableShipStatsAPI stats, String id) {
         //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
+        if (Global.getSettings().getCurrentState() != GameState.TITLE
+                || stats.getFleetMember().getCaptain().getNameString().isEmpty() // easy way to tell there's no officer already on the ship
+        ) {
             return;
         }
-
-        // easy way to tell there's no officer already on the ship
-        if (!stats.getFleetMember().getCaptain().getNameString().isEmpty()) {
-            //PersonAPI person = Global.getFactory().createPerson();
-            stats.getFleetMember().setCaptain(null);
-        }
+        stats.getFleetMember().setCaptain(null);
     }
 
     @Override
     public void applyEffectsAfterShipCreation(ShipAPI ship, String id) {
         ship.getVariant().removeMod(spec.getId());
         ship.getVariant().removePermaMod(spec.getId());
-        //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return;
-        }
-
-        if (ship.getVariant().hasHullMod(OFFICER_DETAILS_HULLMOD_ID)) {
-            ship.getVariant().removePermaMod(OFFICER_DETAILS_HULLMOD_ID);
-            ship.getVariant().removeMod(OFFICER_DETAILS_HULLMOD_ID);
-        }
+        ship.getVariant().removePermaMod(OFFICER_DETAILS_HULLMOD_ID);
+        ship.getVariant().removeMod(OFFICER_DETAILS_HULLMOD_ID);
     }
 
     @Override
     public String getUnapplicableReason(ShipAPI ship) {
         //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return getString("hullModCampaignError");
-        }
-        return getString("hullModNoOfficer");
+        return (Global.getSettings().getCurrentState() != GameState.TITLE) ? getString("hullModCampaignError") : getString("hullModNoOfficer");
     }
 
     @Override
     public boolean isApplicableToShip(ShipAPI ship) {
         //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return false;
-        }
-        return (!ship.getCaptain().getNameString().isEmpty());
+        return (Global.getSettings().getCurrentState() == GameState.TITLE && !ship.getCaptain().getNameString().isEmpty());
     }
 
     @Override

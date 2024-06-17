@@ -8,7 +8,6 @@ import com.fs.starfarer.api.fleet.FleetMemberAPI;
 import com.fs.starfarer.api.fleet.FleetMemberType;
 import com.fs.starfarer.api.impl.campaign.ids.HullMods;
 import com.fs.starfarer.api.loading.WeaponSlotAPI;
-import com.fs.starfarer.api.loading.WeaponSpecAPI;
 import com.fs.starfarer.api.mission.FleetSide;
 import com.fs.starfarer.api.mission.MissionDefinitionAPI;
 import com.fs.starfarer.api.mission.MissionDefinitionPlugin;
@@ -33,24 +32,18 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         // initialize
         initializeMission(api, getString("validateTagline"), null, false);
         SCVE_FilterUtils.setFilter(api, null, false);
-        if (SCVE_FilterUtils.weaponWingFilter < 2) {
-            SCVE_FilterUtils.weaponWingFilter = 2;
-        } else if (SCVE_FilterUtils.weaponWingFilter > 3) {
-            SCVE_FilterUtils.weaponWingFilter = 3;
-        }
+        SCVE_FilterUtils.weaponWingFilter = Math.min(3, Math.max(2, SCVE_FilterUtils.weaponWingFilter));
         SCVE_FilterUtils.applyFilter(api, null);
 
         HashMap<String, Integer> maxCapsAndVents = getMaxCapsAndVents();
         TreeMap<FleetMemberAPI, String> badFleetMemberMap = new TreeMap<>(memberComparator);
+
         for (String variantId : Global.getSettings().getAllVariantIds()) {
-            String error = "";
             ShipVariantAPI variant = Global.getSettings().getVariant(variantId);
-            // skip for certain reasons
-            // // skip variants that Alex hardcoded into the game
-            if (variant.getVariantFilePath() == null) {
-                continue;
-            }
-            // // skip variants that will crash the mission upon addition
+            String error = "";
+
+            if (variant.getVariantFilePath() == null) continue; // skip variants that are hardcoded into the game
+
             ArrayList<String> hullSpecWeaponSlotIds = new ArrayList<>();
             for (WeaponSlotAPI weaponSlot : variant.getHullSpec().getAllWeaponSlotsCopy()) {
                 hullSpecWeaponSlotIds.add(weaponSlot.getId());
@@ -119,13 +112,12 @@ public class MissionDefinition implements MissionDefinitionPlugin {
                 ArrayList<String> badHardpointSlotIds = new ArrayList<>();
                 ArrayList<String> badTurretSlotIds = new ArrayList<>();
                 int ARC_FOR_TURRET = 20;
+
                 for (String slotId : variant.getFittedWeaponSlots()) {
                     WeaponSlotAPI slot = variant.getSlot(slotId);
-                    WeaponSpecAPI weaponSpec = variant.getWeaponSpec(slotId);
-                    if (slot.isBuiltIn()) {
-                        continue;
-                    }
-                    if (!slot.weaponFits(weaponSpec)) {
+                    if (slot.isBuiltIn()) continue;
+
+                    if (!slot.weaponFits(variant.getWeaponSpec(slotId))) {
                         invalidWeaponSlotIds.add(slotId);
                     }
                     if (slot.isHidden()) {
@@ -172,9 +164,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             }
             if (!error.isEmpty()) {
                 if (error.contains(getString("validateFighterSO"))) {
-                    if (variant.getHullSpec().getBuiltInMods().contains(HullMods.SAFETYOVERRIDES)) {
-                        continue;
-                    }
+                    if (variant.getHullSpec().getBuiltInMods().contains(HullMods.SAFETYOVERRIDES)) continue;
                     FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, variant.getHullSpec().getHullId() + HULL_SUFFIX);
                     badFleetMemberMap.put(member, error);
                 } else {
@@ -193,7 +183,7 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             for (Map.Entry<FleetMemberAPI, String> badMember : badFleetMemberMap.entrySet()) {
                 String variantId = badMember.getKey().getVariant().getHullVariantId();
                 log.info(variantId + ": " + badMember.getValue());
-                FleetMemberAPI ship = api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, badMember.getValue(), false);
+                api.addToFleet(FleetSide.PLAYER, variantId, FleetMemberType.SHIP, badMember.getValue(), false);
             }
             log.info("-----------------");
         }

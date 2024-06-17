@@ -23,18 +23,13 @@ public class SCVE_IntegrateHullmod extends BaseHullMod {
         ship.getVariant().removeMod(spec.getId());
         ship.getVariant().removePermaMod(spec.getId());
         //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return;
-        }
+        if (Global.getSettings().getCurrentState() != GameState.TITLE) return;
 
         ArrayList<String> hullmods = (ArrayList<String>) ship.getVariant().getNonBuiltInHullmods();
-        if (!hullmods.isEmpty()) {
-            String last = hullmods.get(hullmods.size() - 1);
-            ship.getVariant().removeMod(last);
-            //log.info("Built-in hullmod: " + last + " as d-mod");
-            //log.info("Built-in hullmod: " + last + " as s-mod");
-            ship.getVariant().addPermaMod(last, !Global.getSettings().getHullModSpec(last).hasTag(Tags.HULLMOD_DMOD));
-        }
+        if (hullmods.isEmpty()) return;
+        String last = hullmods.get(hullmods.size() - 1);
+        ship.getVariant().removeMod(last);
+        ship.getVariant().addPermaMod(last, !Global.getSettings().getHullModSpec(last).hasTag(Tags.HULLMOD_DMOD));
     }
 
     @Override
@@ -52,20 +47,16 @@ public class SCVE_IntegrateHullmod extends BaseHullMod {
     @Override
     public boolean isApplicableToShip(ShipAPI ship) {
         //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return false;
-        }
+        if (Global.getSettings().getCurrentState() != GameState.TITLE) return false;
         return !ship.getVariant().getNonBuiltInHullmods().isEmpty();
     }
 
     @Override
     public void addPostDescriptionSection(TooltipMakerAPI tooltip, HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
         ArrayList<String> hullmods = (ArrayList<String>) ship.getVariant().getNonBuiltInHullmods();
-
-        if (!hullmods.isEmpty()) {
-            String id = hullmods.get(hullmods.size() - 1);
-            String lastHullmodName = Global.getSettings().getHullModSpec(id).getDisplayName();
-            tooltip.addPara(getString("hullModAddSMod"), 10f, Misc.getHighlightColor(), lastHullmodName);
-        }
+        if (hullmods.isEmpty()) return;
+        String id = hullmods.get(hullmods.size() - 1);
+        String lastHullmodName = Global.getSettings().getHullModSpec(id).getDisplayName();
+        tooltip.addPara(getString("hullModAddSMod"), 10f, Misc.getHighlightColor(), lastHullmodName);
     }
 }

@@ -50,18 +50,4 @@ public class MissionDefinition implements MissionDefinitionPlugin {
         }
         return fleetMemberSet;
     }
-
-    /* used Set<FleetMemberAPI> getVanillaFleetMembers(Set<String> blacklist) instead because it's hard to grab DP with just the variant
-    @Deprecated
-    public static Set<String> getVanillaVariantIds(Set<String> blacklist) {
-        Set<String> variantIdSet = new TreeSet<>(variantComparator);
-        for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
-            if (!shipHullSpec.getShipFilePath().startsWith("data") && validateHullSpec(shipHullSpec, blacklist)) {
-                String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
-                variantIdSet.add(hullVariantId);
-            }
-        }
-        return variantIdSet;
-    }
-    */
 }

@@ -147,21 +147,6 @@ public class MissionDefinition implements MissionDefinitionPlugin {
             FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId);
             fleetMemberSet.add(member);
         }
-        /*
-        for (ShipHullSpecAPI shipHullSpec : Global.getSettings().getAllShipHullSpecs()) {
-            String hullVariantId = shipHullSpec.getHullId() + HULL_SUFFIX;
-            ShipVariantAPI variant = Global.getSettings().getVariant(hullVariantId);
-            if (variant == null) continue;
-            if (variant.isStation() || shipHullSpec.getHints().contains(ShipHullSpecAPI.ShipTypeHints.STATION)) {
-                int numModules = variant.getStationModules().size();
-                if (numModules == 0) {
-                    continue;
-                }
-                FleetMemberAPI member = Global.getFactory().createFleetMember(FleetMemberType.SHIP, hullVariantId);
-                fleetMemberSet.add(member);
-            }
-        }
-         */
         return fleetMemberSet;
     }
 }

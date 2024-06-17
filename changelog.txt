@@ -1,3 +1,7 @@
+Version 1.8.3
+- updated for 0.97a
+- code improvements
+
 Version 1.8.2
 
 - strict weapon options in custom_weapon.csv (i think i forgor to update the csv)

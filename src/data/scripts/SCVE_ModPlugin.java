@@ -45,7 +45,6 @@ public class SCVE_ModPlugin extends BaseModPlugin {
         modToWeapon = getModToWeaponListMap();
         modToWing = getModToWingListMap();
         SCVE_FilterUtils.getOriginalData();
-
         try {
             DEFAULT_SHIP_FILTER = Global.getSettings().getInt(DEFAULT_SHIP_FILTER_SETTING);
         } catch (Exception ex) {
@@ -78,9 +77,7 @@ public class SCVE_ModPlugin extends BaseModPlugin {
         // check for ships in storage / sold to markets
         for (MarketAPI market : Global.getSector().getEconomy().getMarketsCopy()) {
             for (SubmarketAPI submarket : market.getSubmarketsCopy()) {
-                if (submarket.getCargo().getMothballedShips() == null) {
-                    continue;
-                }
+                if (submarket.getCargo().getMothballedShips() == null) continue;
                 for (FleetMemberAPI m : submarket.getCargo().getMothballedShips().getMembersListCopy()) {
                     Iterator<String> hullMods = m.getVariant().getHullMods().iterator();
                     while (hullMods.hasNext()) {
@@ -114,9 +111,7 @@ public class SCVE_ModPlugin extends BaseModPlugin {
     public void onGameLoad(boolean newGame) {
         SCVE_FilterUtils.restoreOriginalData(true, true, true);
         for (FactionAPI faction : Global.getSector().getAllFactions()) {
-            if (faction.getId().equals(Factions.PLAYER)) {
-                continue;
-            }
+            if (faction.getId().equals(Factions.PLAYER)) continue;
             Iterator<String> knownHullMods = faction.getKnownHullMods().iterator();
             while (knownHullMods.hasNext()) {
                 String hullModId = knownHullMods.next();

@@ -23,22 +23,18 @@ public class SCVE_DisIntegrateHullmod extends BaseHullMod {
         ship.getVariant().removeMod(spec.getId());
         ship.getVariant().removePermaMod(spec.getId());
         //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return;
-        }
+        if (Global.getSettings().getCurrentState() != GameState.TITLE) return;
         ArrayList<String> permaMods = new ArrayList<>(); // use array list so that I can use .get()
         for (String permaModId : ship.getVariant().getPermaMods()) {
-            if (ship.getVariant().getSMods().contains(permaModId)
-                    || Global.getSettings().getHullModSpec(permaModId).hasTag(Tags.HULLMOD_DMOD)) {
+            if (isSModOrDMod(ship, permaModId)) {
                 permaMods.add(permaModId); // add s-mods and d-mods only
             }
         }
-        if (!permaMods.isEmpty()) {
-            String last = permaMods.get(permaMods.size() - 1);
-            ship.getVariant().removePermaMod(last);
-            ship.getVariant().addMod(last);
-            //log.info("Removed perma-mod: " + last);
-        }
+
+        if (permaMods.isEmpty()) return;
+        String last = permaMods.get(permaMods.size() - 1);
+        ship.getVariant().removePermaMod(last);
+        ship.getVariant().addMod(last);
     }
 
     @Override
@@ -60,8 +56,7 @@ public class SCVE_DisIntegrateHullmod extends BaseHullMod {
             return false;
         }
         for (String permaModId : ship.getVariant().getPermaMods()) {
-            if (ship.getVariant().getSMods().contains(permaModId)
-                    || Global.getSettings().getHullModSpec(permaModId).hasTag(Tags.HULLMOD_DMOD)) {
+            if (isSModOrDMod(ship, permaModId)) {
                 return true;
             }
         }
@@ -71,12 +66,13 @@ public class SCVE_DisIntegrateHullmod extends BaseHullMod {
     @Override
     public void addPostDescriptionSection(TooltipMakerAPI tooltip, HullSize hullSize, ShipAPI ship, float width, boolean isForModSpec) {
         ArrayList<String> sMods = new ArrayList<>(ship.getVariant().getSMods());
+        if (sMods.isEmpty()) return;
+        String id = sMods.get(sMods.size() - 1);
+        String lastSModName = Global.getSettings().getHullModSpec(id).getDisplayName();
+        tooltip.addPara(getString("hullModRemoveSMod"), 10f, Misc.getHighlightColor(), lastSModName);
+    }
 
-        String lastSModName = "";
-        if (!sMods.isEmpty()) {
-            String id = sMods.get(sMods.size() - 1);
-            lastSModName = Global.getSettings().getHullModSpec(id).getDisplayName();
-            tooltip.addPara(getString("hullModRemoveSMod"), 10f, Misc.getHighlightColor(), lastSModName);
-        }
+    public boolean isSModOrDMod(ShipAPI ship, String modId) {
+        return ship.getVariant().getSMods().contains(modId) || Global.getSettings().getHullModSpec(modId).hasTag(Tags.HULLMOD_DMOD);
     }
 }

@@ -29,17 +29,13 @@ public class SCVE_OfficerDetails extends BaseHullMod {
             return;
         }
         // ship.getCaptain() returns null for the first frame
-        //log.info("first frame: " + firstFrame);
         if (firstFrame) {
             firstFrame = false;
             return;
         }
-        if (ship.getCaptain() != null) {
-            if (ship.getCaptain().getNameString().isEmpty()) {
-                //log.info("No officer detected, removing Officer Details hullmod");
-                ship.getVariant().removePermaMod(spec.getId());
-                firstFrame = true;
-            }
+        if (ship.getCaptain() != null && ship.getCaptain().getNameString().isEmpty()) {
+            ship.getVariant().removePermaMod(spec.getId());
+            firstFrame = true;
         }
 
     }
@@ -59,13 +55,9 @@ public class SCVE_OfficerDetails extends BaseHullMod {
     @Override
     public boolean isApplicableToShip(ShipAPI ship) {
         //this needs to do nothing if done in campaign
-        if (Global.getSettings().getCurrentState() != GameState.TITLE) {
-            return false;
-        }
-        if (ship.getCaptain() != null) {
-            return (!ship.getCaptain().getNameString().isEmpty());
-        }
-        return false;
+        return (Global.getSettings().getCurrentState() == GameState.TITLE
+                && ship.getCaptain() != null
+                && !ship.getCaptain().getNameString().isEmpty());
     }
 
     @Override
@@ -73,7 +65,7 @@ public class SCVE_OfficerDetails extends BaseHullMod {
         PersonAPI person = ship.getCaptain();
         final float PAD = 10f;
 
-        if (!person.isDefault()) {
+        if (person != null && !person.isDefault()) {
             String title, imageText;
             float portraitHeight = 100;
 
@@ -103,23 +95,17 @@ public class SCVE_OfficerDetails extends BaseHullMod {
 
             TooltipMakerAPI officerImageWithText = tooltip.beginImageWithText(portrait, portraitHeight);
             officerImageWithText.addPara(imageText,
-                    -portraitHeight / 2, Color.YELLOW,
-                    shipName, fullName, level, personality);
-            //officerImageWithText.addPara(desc, 0);
+                                         -portraitHeight / 2, Color.YELLOW,
+                                         shipName, fullName, level, personality);
             tooltip.addImageWithText(PAD);
 
             if (isAdmiral) {
                 tooltip.addSectionHeading(getString("hullModOfficerDetailAdmiralSkills"), Alignment.MID, PAD);
-
                 for (SkillLevelAPI skill : skills) {
                     float skillLevel = skill.getLevel();
-                    if (!skill.getSkill().isAdmiralSkill() || skillLevel == 0) {
-                        continue;
-                    }
+                    if (!skill.getSkill().isAdmiralSkill() || skillLevel == 0) continue;
                     String skillSprite = skill.getSkill().getSpriteName();
                     String skillName = skill.getSkill().getName();
-                    //String aptitude = skill.getSkill().getGoverningAptitudeId();
-
                     TooltipMakerAPI skillImageWithText = tooltip.beginImageWithText(skillSprite, 40);
                     skillImageWithText.addPara(skillName, 0);
                     tooltip.addImageWithText(PAD);
@@ -127,25 +113,14 @@ public class SCVE_OfficerDetails extends BaseHullMod {
             }
 
             tooltip.addSectionHeading(getString("hullModOfficerDetailOfficerSkills"), Alignment.MID, PAD);
-
             for (SkillLevelAPI skill : skills) {
                 float skillLevel = skill.getLevel();
-                if (!skill.getSkill().isCombatOfficerSkill() || skillLevel == 0) {
-                    continue;
-                }
+                if (!skill.getSkill().isCombatOfficerSkill() || skillLevel == 0) continue;
                 String skillSprite = skill.getSkill().getSpriteName();
                 String skillName = skill.getSkill().getName();
-                //String aptitude = skill.getSkill().getGoverningAptitudeId();
-
-                String eliteText = "", eliteTextPre = "", eliteTextPost = "";
-                if (skillLevel == 2) {
-                    eliteTextPre = " (";
-                    eliteText = getString("hullModOfficerDetailElite");
-                    eliteTextPost = ")";
-                }
-
+                String eliteText = (skillLevel == 2) ? String.format(" (%s)",getString("hullModOfficerDetailElite")) : "";
                 TooltipMakerAPI skillImageWithText = tooltip.beginImageWithText(skillSprite, 40);
-                skillImageWithText.addPara(skillName + eliteTextPre + eliteText + eliteTextPost, 0, Color.GREEN, eliteText);
+                skillImageWithText.addPara(skillName + eliteText, 0, Color.GREEN, eliteText);
                 tooltip.addImageWithText(PAD);
             }
         }

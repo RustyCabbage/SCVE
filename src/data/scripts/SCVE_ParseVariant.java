@@ -12,6 +12,7 @@ public class SCVE_ParseVariant {
     private static final Logger log = Global.getLogger(SCVE_ParseVariant.class);
 
     public ShipVariantAPI parseVariant(String fileName) {
+        // todo i did this in magiclib
         return null;
     }
 
