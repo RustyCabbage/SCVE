@@ -1,3 +1,6 @@
+Version 1.8.4
+- removed some testing junk
+
 Version 1.8.3
 - updated for 0.97a
 - code improvements
